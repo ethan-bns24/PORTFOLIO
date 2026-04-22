@@ -352,6 +352,14 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
   .terminal-intro{text-align:center;}
   .terminal-intro p{max-width:none;}
   .hint,.quick-actions{justify-content:center;}
+  #terminal-section{min-height:auto;}
+  #terminal{width:100%;max-width:720px;margin-inline:auto;}
+  .term-header{padding:.65rem .85rem;}
+  .term-body{min-height:280px;max-height:min(52vh,380px);}
+  .term-line{font-size:12.5px;}
+  .term-prompt{flex-wrap:wrap;row-gap:.35rem;}
+  .term-input{font-size:16px;padding:.35rem 0;}
+  .term-cursor-blink{display:none;}
   .proj-grid{grid-template-columns:1fr 1fr;}
   .skills-wrap{grid-template-columns:1fr;}
   #radar-canvas{display:none;}
@@ -373,7 +381,11 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
   .edgedemo{grid-template-columns:1fr;}
   .demo-box{width:min(100vw - 1rem,95vw);}
   .demo-body{padding:1rem;}
-  .term-body{min-height:300px;max-height:380px;}
+  #terminal{max-width:640px;}
+  .term-body{min-height:260px;max-height:min(50vh,360px);padding:1rem;}
+  .term-title{font-size:9px;}
+  .term-line{font-size:12px;}
+  .term-ps{font-size:12px;}
   .timeline{padding-left:1.35rem;}
   .tl-dot{left:-1.35rem;}
   .fw-card,.pc,.lc,.fit-card,.tl-card,.cc{padding:1.25rem;}
