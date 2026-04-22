@@ -307,7 +307,13 @@ footer{background:var(--bg);padding:2rem 2.5rem;border-top:1px solid var(--borde
 #konami.on{display:flex;}
 #konami h2{font-family:'Space Mono',monospace;font-size:1.5rem;color:var(--g);text-align:center;letter-spacing:.1em;}
 #konami p{font-family:'Space Mono',monospace;font-size:.85rem;color:var(--ink3);text-align:center;max-width:500px;line-height:1.7;}
-#konami canvas{border:1px solid var(--border);}
+#konami .konami-demo{width:min(940px,92vw);display:flex;flex-direction:column;gap:.85rem;align-items:center;}
+#konami canvas{border:1px solid var(--border);background:var(--bg3);border-radius:2px;width:100%;height:auto;display:block;}
+#konami .konami-ctrl{display:flex;flex-wrap:wrap;gap:.65rem 1rem;justify-content:center;align-items:center;width:100%;}
+#konami .konami-ctrl .edge-label{color:var(--ink4);}
+#konami .konami-ctrl .edge-slider{width:180px;}
+#konami .konami-ctrl button{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.08em;padding:8px 12px;border-radius:2px;border:1px solid var(--border);background:var(--bg3);color:var(--ink3);transition:all .2s;}
+#konami .konami-ctrl button:hover{border-color:var(--g);color:var(--g);background:rgba(26,107,74,.04);}
 #konami-close{margin-top:1rem;font-family:'Space Mono',monospace;font-size:10px;color:var(--ink4);background:none;border:1px solid var(--border2);padding:8px 20px;border-radius:2px;transition:all .2s;letter-spacing:.1em;}
 #konami-close:hover{border-color:var(--g);color:var(--g);}
 

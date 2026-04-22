@@ -34,8 +34,11 @@
 
 <div id="konami" role="dialog" aria-modal="true" aria-labelledby="konami-title">
   <h2 id="konami-title">// EASTER EGG UNLOCKED 🎉</h2>
-  <p>Tu as trouvé le Konami Code (↑↑↓↓←→←→BA).<br>Voici un automate cellulaire de Conway's Game of Life — le même type de système que j'étudie en simulation numérique.</p>
-  <canvas id="gol-canvas" width="500" height="280"></canvas>
+  <p>Tu as trouvé le Konami Code (↑↑↓↓←→←→BA).<br>Mini démo de mécanique: flexion d'une poutre en console (charge ponctuelle) avec moments et flèche.</p>
+  <div class="konami-demo" id="konami-demo">
+    <canvas id="mech-canvas" width="860" height="360"></canvas>
+    <div class="konami-ctrl" id="mech-ctrl" aria-label="Contrôles de la simulation mécanique"></div>
+  </div>
   <button id="konami-close" type="button">[ FERMER ]</button>
 </div>
 

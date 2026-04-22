@@ -360,8 +360,8 @@ const I18N={
       links:["Profil","Expérience","Projets","Compétences","Contact"]
     },
     konami:{
-      title:"// EASTER EGG UNLOCKED 🎉",
-      body:`Tu as trouvé le Konami Code (↑↑↓↓←→←→BA).<br>Voici un automate cellulaire de Conway's Game of Life — le même type de système que j'étudie en simulation numérique.`,
+      title:"// MINI SIMU MÉCANIQUE UNLOCKED",
+      body:`Tu as trouvé le Konami Code (↑↑↓↓←→←→BA).<br>Mini démo de mécanique: flexion d'une poutre en console sous charge ponctuelle. Change la force et la position pour voir la flèche et le diagramme de moment.`,
       close:"[ FERMER ]"
     },
     terminal:{
@@ -773,8 +773,8 @@ const I18N={
       links:["Profile","Experience","Projects","Skills","Contact"]
     },
     konami:{
-      title:"// EASTER EGG UNLOCKED 🎉",
-      body:`You found the Konami Code (↑↑↓↓←→←→BA).<br>Here is Conway's Game of Life — the same kind of system I study in numerical simulation.`,
+      title:"// MINI MECHANICS SIM UNLOCKED",
+      body:`You found the Konami Code (↑↑↓↓←→←→BA).<br>Mini mechanics demo: cantilever beam bending under a point load. Change the force and its position to see deflection and the bending moment diagram.`,
       close:"[ CLOSE ]"
     },
     terminal:{
@@ -1797,52 +1797,296 @@ applyLanguage(currentLang);
   document.addEventListener('keydown',e=>{
     if(e.keyCode===seq[pos]){
       pos++;
-      if(pos===seq.length){pos=0;launchGOL();}
+      if(pos===seq.length){pos=0;launchMech();}
     } else pos=0;
   });
 
-  function launchGOL(){
+  function launchMech(){
     const k=document.getElementById('konami');
     k.classList.add('on');
-    const c=document.getElementById('gol-canvas');
-    const ctx=c.getContext('2d');
-    const W=500,H=280,CELL=8,COLS=Math.floor(W/CELL),ROWS=Math.floor(H/CELL);
-    let grid=Array.from({length:ROWS},()=>Array.from({length:COLS},()=>Math.random()<.3?1:0));
-    let rafGol;
-    function next(){
-      const ng=Array.from({length:ROWS},()=>new Array(COLS).fill(0));
-      for(let r=0;r<ROWS;r++)for(let c2=0;c2<COLS;c2++){
-        let n=0;
-        for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
-          if(dr===0&&dc===0)continue;
-          const nr=(r+dr+ROWS)%ROWS,nc=(c2+dc+COLS)%COLS;
-          n+=grid[nr][nc];
-        }
-        ng[r][c2]=(grid[r][c2]===1&&(n===2||n===3))?1:(grid[r][c2]===0&&n===3?1:0);
-      }
-      grid=ng;
+    const canvas=document.getElementById('mech-canvas');
+    const ctrl=document.getElementById('mech-ctrl');
+    if(!canvas||!ctrl)return;
+    const ctx=canvas.getContext('2d');
+
+    const state={
+      L:1.0,
+      a:0.7,
+      F:350,
+      EI:160,
+      drag:false
+    };
+
+    function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+
+    function setCtrlHTML(){
+      const labels=currentLang==='fr'
+        ? {pos:'POSITION:',force:'FORCE:',stiff:'RIGIDITÉ EI:',reset:'RESET',random:'RANDOM'}
+        : {pos:'POSITION:',force:'FORCE:',stiff:'STIFFNESS EI:',reset:'RESET',random:'RANDOM'};
+      ctrl.innerHTML=`
+        <span class="edge-label">${labels.pos}</span>
+        <input class="edge-slider" type="range" id="mech-a" min="20" max="100" value="${Math.round(state.a*100)}">
+        <span class="edge-label" id="mech-a-v">${Math.round(state.a*100)}%</span>
+
+        <span class="edge-label">${labels.force}</span>
+        <input class="edge-slider" type="range" id="mech-f" min="50" max="800" value="${state.F}">
+        <span class="edge-label" id="mech-f-v">${state.F}N</span>
+
+        <span class="edge-label">${labels.stiff}</span>
+        <input class="edge-slider" type="range" id="mech-ei" min="60" max="420" value="${state.EI}">
+        <span class="edge-label" id="mech-ei-v">${state.EI}</span>
+
+        <button type="button" id="mech-reset">${labels.reset}</button>
+        <button type="button" id="mech-rand">${labels.random}</button>
+      `;
     }
+
+    function beamDeflection(x,a,F,EI,L){
+      // Cantilever beam, point load at x=a from the fixed end.
+      // w'' = M/EI, with M(x)=F*(a-x) for x<=a else 0.
+      if(x<=a){
+        return (F/EI)*(a*x*x/2 - x*x*x/6);
+      }
+      return (F/EI)*(a*a*x/2 - a*a*a/6);
+    }
+
+    function beamMoment(x,a,F){
+      return x<=a ? F*(a-x) : 0;
+    }
+
+    function rgba(r,g,b,a){return `rgba(${r},${g},${b},${a})`;}
+
+    function resizeCanvas(){
+      const dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+      const maxW=Math.min(940,Math.max(320,Math.floor(window.innerWidth*0.92)));
+      const w=maxW;
+      const h=Math.floor(w*0.42);
+      canvas.style.width=w+'px';
+      canvas.style.height=h+'px';
+      canvas.width=Math.floor(w*dpr);
+      canvas.height=Math.floor(h*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+
     function draw(){
-      ctx.fillStyle='#faf8f4';ctx.fillRect(0,0,W,H);
-      for(let r=0;r<ROWS;r++)for(let c2=0;c2<COLS;c2++){
-        if(grid[r][c2]){
-          ctx.fillStyle=`rgba(26,107,74,${.4+Math.random()*.4})`;
-          ctx.fillRect(c2*CELL+1,r*CELL+1,CELL-2,CELL-2);
-        }
+      const W=canvas.clientWidth||860;
+      const H=canvas.clientHeight||360;
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle='rgba(250,248,244,1)';
+      ctx.fillRect(0,0,W,H);
+
+      const pad=18;
+      const top=pad;
+      const plotH=Math.floor(H*0.26);
+      const beamH=H-plotH-pad*2-12;
+      const beamY=top+Math.floor(beamH*0.55);
+      const x0=pad+10;
+      const x1=W-pad-10;
+      const Lpx=x1-x0;
+
+      const L=state.L;
+      const a=clamp(state.a*L,0.2*L,L);
+      const F=state.F;
+      const EI=state.EI;
+
+      const maxM=F*a;
+      const tipW=beamDeflection(L,a,F,EI,L);
+      const maxW=tipW;
+      const targetDef=beamH*0.34;
+      const scale=clamp(targetDef/(Math.max(1e-6,Math.abs(maxW))),0,1200);
+
+      // Beam segments colored by moment magnitude
+      const segs=90;
+      for(let i=0;i<segs;i++){
+        const t0=i/segs, t1=(i+1)/segs;
+        const xm=(t0+t1)/2*L;
+        const M=beamMoment(xm,a,F);
+        const r=maxM>0?M/maxM:0;
+        const alpha=0.08+0.55*r;
+        ctx.fillStyle=rgba(26,107,74,alpha);
+        const sx=x0+t0*Lpx;
+        const sw=(t1-t0)*Lpx+1;
+        ctx.fillRect(sx,beamY-10,sw,20);
       }
-      next();
-      rafGol=requestAnimationFrame(draw);
+      ctx.strokeStyle='rgba(216,207,196,1)';
+      ctx.lineWidth=1;
+      ctx.strokeRect(x0,beamY-10,Lpx,20);
+
+      // Deflection curve
+      ctx.beginPath();
+      for(let i=0;i<=segs;i++){
+        const t=i/segs;
+        const x=t*L;
+        const w=beamDeflection(x,a,F,EI,L);
+        const sx=x0+t*Lpx;
+        const sy=beamY + w*scale;
+        if(i===0)ctx.moveTo(sx,sy);
+        else ctx.lineTo(sx,sy);
+      }
+      ctx.strokeStyle='rgba(26,107,74,0.9)';
+      ctx.lineWidth=2;
+      ctx.stroke();
+
+      // Fixed clamp
+      ctx.fillStyle='rgba(61,53,44,0.9)';
+      ctx.fillRect(x0-8,beamY-22,8,44);
+      ctx.fillStyle='rgba(216,207,196,1)';
+      for(let i=0;i<9;i++){
+        ctx.fillRect(x0-8,beamY-22+i*5,8,1);
+      }
+
+      // Load marker
+      const ax=x0+(a/L)*Lpx;
+      ctx.strokeStyle='rgba(194,74,26,0.95)';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(ax,beamY-34);
+      ctx.lineTo(ax,beamY-6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ax-6,beamY-10);
+      ctx.lineTo(ax,beamY-2);
+      ctx.lineTo(ax+6,beamY-10);
+      ctx.stroke();
+
+      // Moment diagram (below)
+      const plotY=H-pad-plotH;
+      const baseY=plotY+plotH-14;
+      ctx.fillStyle='rgba(245,240,232,1)';
+      ctx.fillRect(x0,plotY,Lpx,plotH);
+      ctx.strokeStyle='rgba(216,207,196,1)';
+      ctx.lineWidth=1;
+      ctx.strokeRect(x0,plotY,Lpx,plotH);
+      ctx.beginPath();
+      ctx.moveTo(x0,baseY);
+      for(let i=0;i<=segs;i++){
+        const t=i/segs;
+        const x=t*L;
+        const M=beamMoment(x,a,F);
+        const y=baseY - (maxM>0? (M/maxM)*(plotH-28) : 0);
+        const sx=x0+t*Lpx;
+        ctx.lineTo(sx,y);
+      }
+      ctx.lineTo(x0+(a/L)*Lpx,baseY);
+      ctx.lineTo(x0,baseY);
+      ctx.closePath();
+      ctx.fillStyle='rgba(26,107,74,0.12)';
+      ctx.fill();
+      ctx.strokeStyle='rgba(26,107,74,0.55)';
+      ctx.stroke();
+
+      // Labels
+      const unit=currentLang==='fr'
+        ? {tip:'Flèche en bout',mm:'Moment max'}
+        : {tip:'Tip deflection',mm:'Max moment'};
+      ctx.fillStyle='rgba(107,95,82,1)';
+      ctx.font='600 11px "Space Mono", monospace';
+      ctx.textAlign='left';
+      ctx.textBaseline='top';
+      ctx.fillText(`${unit.tip}: ${(tipW*1000).toFixed(1)} mm`, x0, top);
+      ctx.fillText(`${unit.mm}: ${(maxM).toFixed(0)} N·m`, x0, top+16);
+      ctx.fillText(`F=${F}N  a=${Math.round((a/L)*100)}%  EI=${EI}`, x0, top+32);
+      ctx.fillText(`M(x)`, x0+6, plotY+6);
     }
-    function closeGOL(){
-      cancelAnimationFrame(rafGol);
+
+    function bindControls(){
+      const slA=ctrl.querySelector('#mech-a');
+      const slF=ctrl.querySelector('#mech-f');
+      const slEI=ctrl.querySelector('#mech-ei');
+      const vA=ctrl.querySelector('#mech-a-v');
+      const vF=ctrl.querySelector('#mech-f-v');
+      const vEI=ctrl.querySelector('#mech-ei-v');
+      const reset=ctrl.querySelector('#mech-reset');
+      const rand=ctrl.querySelector('#mech-rand');
+      const update=()=>{
+        state.a=+slA.value/100;
+        state.F=+slF.value;
+        state.EI=+slEI.value;
+        vA.textContent=Math.round(state.a*100)+'%';
+        vF.textContent=state.F+'N';
+        vEI.textContent=String(state.EI);
+        draw();
+      };
+      slA.addEventListener('input',update);
+      slF.addEventListener('input',update);
+      slEI.addEventListener('input',update);
+      reset.addEventListener('click',()=>{
+        state.a=0.7; state.F=350; state.EI=160;
+        slA.value=String(Math.round(state.a*100));
+        slF.value=String(state.F);
+        slEI.value=String(state.EI);
+        update();
+      });
+      rand.addEventListener('click',()=>{
+        state.a=clamp(0.2+Math.random()*0.8,0.2,1);
+        state.F=Math.round(120+Math.random()*640);
+        state.EI=Math.round(80+Math.random()*320);
+        slA.value=String(Math.round(state.a*100));
+        slF.value=String(state.F);
+        slEI.value=String(state.EI);
+        update();
+      });
+    }
+
+    function setAFromPointer(clientX){
+      const rect=canvas.getBoundingClientRect();
+      const x=(clientX-rect.left)/rect.width;
+      state.a=clamp(x,0.2,1);
+      const slA=ctrl.querySelector('#mech-a');
+      if(slA)slA.value=String(Math.round(state.a*100));
+      const vA=ctrl.querySelector('#mech-a-v');
+      if(vA)vA.textContent=Math.round(state.a*100)+'%';
+      draw();
+    }
+
+    function onPointerDown(e){
+      const rect=canvas.getBoundingClientRect();
+      const x=(e.clientX-rect.left)/rect.width;
+      const y=(e.clientY-rect.top)/rect.height;
+      // If near the top beam zone, allow dragging the load position.
+      if(y<0.72){
+        state.drag=true;
+        setAFromPointer(e.clientX);
+        canvas.setPointerCapture?.(e.pointerId);
+      }
+    }
+    function onPointerMove(e){
+      if(!state.drag)return;
+      setAFromPointer(e.clientX);
+    }
+    function onPointerUp(){
+      state.drag=false;
+    }
+
+    function closeMech(){
       k.classList.remove('on');
       document.removeEventListener('keydown',handleEscape);
+      window.removeEventListener('resize',handleResize);
+      canvas.removeEventListener('pointerdown',onPointerDown);
+      canvas.removeEventListener('pointermove',onPointerMove);
+      canvas.removeEventListener('pointerup',onPointerUp);
+      canvas.removeEventListener('pointercancel',onPointerUp);
     }
+
     function handleEscape(e){
-      if(e.key==='Escape'&&k.classList.contains('on'))closeGOL();
+      if(e.key==='Escape'&&k.classList.contains('on'))closeMech();
     }
+
+    function handleResize(){
+      resizeCanvas();
+      draw();
+    }
+
+    setCtrlHTML();
+    resizeCanvas();
+    bindControls();
     draw();
+    canvas.addEventListener('pointerdown',onPointerDown);
+    canvas.addEventListener('pointermove',onPointerMove);
+    canvas.addEventListener('pointerup',onPointerUp);
+    canvas.addEventListener('pointercancel',onPointerUp);
+    window.addEventListener('resize',handleResize,{passive:true});
     document.addEventListener('keydown',handleEscape);
-    document.getElementById('konami-close').onclick=closeGOL;
+    document.getElementById('konami-close').onclick=closeMech;
   }
 })();
