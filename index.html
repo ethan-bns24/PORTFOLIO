@@ -144,6 +144,9 @@ nav{position:fixed;top:1px;left:0;right:0;z-index:500;display:flex;justify-conte
 .pc-desc{font-size:.85rem;color:var(--ink3);line-height:1.7;font-weight:400;flex:1;margin-bottom:1.25rem;}
 .pc-proof{font-family:'Space Mono',monospace;font-size:8.5px;color:var(--ink4);letter-spacing:.05em;line-height:1.8;margin:-.2rem 0 1rem;}
 .pc-proof strong{color:var(--g);font-weight:700;}
+.pc-links{display:flex;flex-wrap:wrap;gap:.5rem;margin:-.2rem 0 1rem;position:relative;z-index:2;}
+.pc-link{font-family:'Space Mono',monospace;font-size:8.5px;padding:5px 8px;border-radius:2px;background:var(--bg3);border:1px solid var(--border);color:var(--ink3);text-decoration:none;letter-spacing:.04em;transition:all .2s;}
+.pc-link:hover{border-color:var(--g);color:var(--g);background:rgba(26,107,74,.04);}
 .pc-metric{font-family:'Space Mono',monospace;font-size:9px;color:var(--g);letter-spacing:.04em;background:var(--g3);border:1px solid var(--border);padding:6px 10px;border-radius:2px;margin-bottom:1.25rem;line-height:1.6;}
 .pc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1.5rem;}
 .ptag{font-family:'Space Mono',monospace;font-size:8.5px;padding:3px 8px;border-radius:2px;background:var(--bg2);border:1px solid var(--border2);color:var(--ink3);letter-spacing:.04em;}
@@ -172,6 +175,7 @@ nav{position:fixed;top:1px;left:0;right:0;z-index:500;display:flex;justify-conte
 /* UAV DEMO */
 .uavdemo{position:relative;}
 .uavdemo canvas{width:100%;border:1px solid var(--border2);border-radius:2px;display:block;}
+.uavdemo img{width:100%;border:1px solid var(--border2);border-radius:2px;display:block;background:var(--bg3);}
 .uav-info{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:1px;}
 .uav-stat{background:var(--bg3);border:1px solid var(--border2);padding:.75rem;text-align:center;}
 .uav-stat-n{font-family:'Space Mono',monospace;font-size:1.1rem;color:var(--g);font-weight:700;}
@@ -507,9 +511,12 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
       <div class="pc-title">Détection de Fissures — U-Net</div>
       <p class="pc-desc">Segmentation sémantique pour inspection structurelle. U-Net + Squeeze-and-Excitation sur ~40 000 images.</p>
       <div class="pc-proof"><strong>RÔLE</strong> pipeline d'entraînement et d'évaluation complet · <strong>PREUVE</strong> métriques de validation publiées</div>
+      <div class="pc-links">
+        <a href="crack-detection-demo.ipynb" target="_blank" rel="noopener noreferrer" class="pc-link" onclick="event.stopPropagation()">Notebook de démo ↗</a>
+      </div>
       <div class="pc-metric">Accuracy 97,65% · F1 97,59% · Precision 100%</div>
       <div class="pc-tags"><span class="ptag">PyTorch</span><span class="ptag">U-Net</span><span class="ptag">SE-Blocks</span><span class="ptag">OpenCV</span></div>
-      <div class="pc-cta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>LANCER LA DÉMO DE DÉTECTION DE CONTOURS</div>
+      <div class="pc-cta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>OUVRIR LE NOTEBOOK DE DÉMO</div>
     </div>
 
     <div class="pc rv" data-demo="uav" style="cursor:pointer;">
@@ -518,9 +525,12 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
       <div class="pc-title">Atterrissage Autonome UAV</div>
       <p class="pc-desc">Pipeline ROS/PX4 complet. Détection ArUco, estimation de pose 6DOF (solvePnP), consignes MAVLink.</p>
       <div class="pc-proof"><strong>RÔLE</strong> vision, pose estimation et boucle de guidage · <strong>IMPACT</strong> atterrissage centimétrique temps réel</div>
+      <div class="pc-links">
+        <a href="https://github.com/ethan-bns24/quadrotors_landing_vision" target="_blank" rel="noopener noreferrer" class="pc-link" onclick="event.stopPropagation()">Repo GitHub ↗</a>
+      </div>
       <div class="pc-metric">95% de réussite · Précision centimétrique · ~60 FPS</div>
       <div class="pc-tags"><span class="ptag">ROS Noetic</span><span class="ptag">PX4</span><span class="ptag">OpenCV</span><span class="ptag">MAVLink</span></div>
-      <div class="pc-cta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>SIMULER L'ATTERRISSAGE UAV</div>
+      <div class="pc-cta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>VOIR LA DÉMO RÉELLE D'ATTERRISSAGE</div>
     </div>
 
     <div class="pc rv" data-demo="net" style="cursor:pointer;">
@@ -542,7 +552,7 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
       <div class="pc-proof"><strong>RÔLE</strong> logique d'identification et intégration IoT · <strong>CONTEXTE</strong> projet réel avec contrainte métier</div>
       <div class="pc-metric">Partenariat Accor · BLE sécurisé · IoT</div>
       <div class="pc-tags"><span class="ptag">BLE</span><span class="ptag">iOS Swift</span><span class="ptag">Raspberry Pi</span><span class="ptag">GRMS</span></div>
-      <div class="pc-cta" style="opacity:.3;">Confidentiel — entreprise partenaire</div>
+      <a href="https://github.com/ethan-bns24/Pullman-Concept-Room" target="_blank" rel="noopener noreferrer" class="pc-cta" style="text-decoration:none;">github.com/ethan-bns24/Pullman-Concept-Room ↗</a>
     </div>
 
     <div class="pc rv" data-demo="none">
@@ -553,7 +563,7 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
       <div class="pc-proof"><strong>RÔLE</strong> modélisation ML et logique applicative · <strong>PREUVE</strong> validation sur données de conduite</div>
       <div class="pc-metric">ML embarqué · Profils réels validés</div>
       <div class="pc-tags"><span class="ptag">Python</span><span class="ptag">ML</span><span class="ptag">Mobile</span><span class="ptag">Énergie</span></div>
-      <a href="https://github.com/ethan-bns24" target="_blank" rel="noopener noreferrer" class="pc-cta" style="text-decoration:none;">github.com/ethan-bns24 ↗</a>
+      <a href="https://github.com/ethan-bns24/EV-APP" target="_blank" rel="noopener noreferrer" class="pc-cta" style="text-decoration:none;">github.com/ethan-bns24/EV-APP ↗</a>
     </div>
 
     <div class="pc rv" data-demo="none" style="background:var(--g3);border-color:var(--border);">
@@ -1056,6 +1066,8 @@ if(skillSec)skillObs.observe(skillSec);
 const overlay=document.getElementById('demo-overlay');
 const demoBody=document.getElementById('demo-body');
 const demoTitle=document.getElementById('demo-title');
+const crackNotebookDemo='crack-detection-demo.ipynb';
+const uavLandingDemoGif='uav-landing-demo.gif';
 document.getElementById('demo-close').onclick=()=>overlay.classList.remove('open');
 overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});
 
@@ -1063,9 +1075,12 @@ document.querySelectorAll('.pc[data-demo]').forEach(card=>{
   if(card.dataset.demo==='none')return;
   card.addEventListener('click',()=>{
     const demo=card.dataset.demo;
+    if(demo==='edge'){
+      window.open(crackNotebookDemo,'_blank','noopener,noreferrer');
+      return;
+    }
     overlay.classList.add('open');
-    if(demo==='edge')launchEdgeDemo();
-    else if(demo==='uav')launchUAVDemo();
+    if(demo==='uav')launchUAVDemo();
     else if(demo==='net')launchNetDemo();
   });
 });
@@ -1163,117 +1178,23 @@ function launchEdgeDemo(){
 
 // ── UAV LANDING DEMO ──
 function launchUAVDemo(){
-  demoTitle.textContent='// DEMO — SIMULATION ATTERRISSAGE UAV AUTONOME';
+  demoTitle.textContent='// DEMO — ATTERRISSAGE UAV AUTONOME';
   demoBody.innerHTML=`
     <div class="uavdemo">
-      <canvas id="uav-c" width="700" height="360"></canvas>
+      <img src="${uavLandingDemoGif}" alt="Démo réelle d'atterrissage autonome UAV">
       <div class="uav-info">
-        <div class="uav-stat"><div class="uav-stat-n" id="u-alt">8.0m</div><div class="uav-stat-l">ALTITUDE</div></div>
-        <div class="uav-stat"><div class="uav-stat-n" id="u-err">—</div><div class="uav-stat-l">ERREUR XY</div></div>
-        <div class="uav-stat"><div class="uav-stat-n" id="u-fps">60</div><div class="uav-stat-l">FPS PIPELINE</div></div>
-        <div class="uav-stat"><div class="uav-stat-n" id="u-st">APPROCHE</div><div class="uav-stat-l">STATUT</div></div>
+        <div class="uav-stat"><div class="uav-stat-n">95%</div><div class="uav-stat-l">RÉUSSITE</div></div>
+        <div class="uav-stat"><div class="uav-stat-n">cm</div><div class="uav-stat-l">PRÉCISION</div></div>
+        <div class="uav-stat"><div class="uav-stat-n">~60</div><div class="uav-stat-l">FPS</div></div>
+        <div class="uav-stat"><div class="uav-stat-n">ROS/PX4</div><div class="uav-stat-l">STACK</div></div>
       </div>
       <div style="margin-top:1rem;font-size:.85rem;color:var(--ink3);line-height:1.75;font-weight:400;border-left:2px solid var(--border);padding-left:1rem;">
-        <strong style="color:var(--g);">Pipeline réel :</strong> La caméra embarquée détecte le marqueur ArUco (carré noir/blanc) via OpenCV. <strong>solvePnP</strong> calcule la position 3D exacte du drone par rapport à la cible (6 degrés de liberté). Des consignes PID sont envoyées via <strong>MAVLink</strong> à PX4 pour corriger la trajectoire. La simulation ci-dessous reproduit la logique de contrôle réelle.
+        <strong style="color:var(--g);">Démo réelle :</strong> ce GIF montre l'atterrissage autonome avec détection du marqueur <strong>ArUco</strong>, estimation de pose via <strong>solvePnP</strong> et corrections envoyées à <strong>PX4</strong> via <strong>MAVLink</strong>. C'est la démo terrain du projet, pas une animation reconstituée.
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+        <a href="https://github.com/ethan-bns24/quadrotors_landing_vision" target="_blank" rel="noopener noreferrer" class="quick-link">Voir le repo GitHub</a>
       </div>
     </div>`;
-  const c=document.getElementById('uav-c');
-  const ctx=c.getContext('2d');
-  let uavX=350,uavY=50,targetX=350,targetY=300,altitude=8,phase='approach';
-  let landed=false,frame=0;
-  const noise=()=>(Math.random()-.5)*1.5;
-
-  function drawAruco(x,y,size){
-    ctx.fillStyle='#fff';ctx.fillRect(x-size/2,y-size/2,size,size);
-    ctx.fillStyle='#000';ctx.fillRect(x-size/2+4,y-size/2+4,size-8,size-8);
-    // pattern
-    const g=Math.floor((size-8)/3);
-    [[0,0],[2,0],[1,1],[0,2],[2,2]].forEach(([gx,gy])=>{
-      ctx.fillStyle='#fff';
-      ctx.fillRect(x-size/2+4+gx*g,y-size/2+4+gy*g,g,g);
-    });
-  }
-
-  function drawDrone(x,y){
-    const s=22;
-    // arms
-    ctx.strokeStyle='rgba(26,107,74,.8)';ctx.lineWidth=3;
-    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([dx,dy])=>{
-      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+dx*s,y+dy*s);ctx.stroke();
-      ctx.beginPath();ctx.arc(x+dx*s,y+dy*s,5,0,Math.PI*2);
-      ctx.fillStyle='rgba(26,107,74,.9)';ctx.fill();
-    });
-    ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);
-    ctx.fillStyle='rgba(26,107,74,.6)';ctx.fill();
-    // camera FOV cone
-    ctx.beginPath();
-    ctx.moveTo(x,y+8);
-    ctx.lineTo(x-30,y+60);ctx.lineTo(x+30,y+60);
-    ctx.closePath();
-    ctx.fillStyle='rgba(26,107,74,.06)';ctx.fill();
-    ctx.strokeStyle='rgba(26,107,74,.2)';ctx.lineWidth=1;ctx.stroke();
-  }
-
-  let rafId;
-  function animUAV(){
-    if(!document.getElementById('uav-c')){cancelAnimationFrame(rafId);return;}
-    frame++;
-    ctx.clearRect(0,0,700,360);
-    // bg
-    ctx.fillStyle='#faf8f4';ctx.fillRect(0,0,700,360);
-    // ground
-    ctx.fillStyle='#e8e2d8';ctx.fillRect(0,290,700,70);
-    ctx.strokeStyle='rgba(26,107,74,.1)';ctx.lineWidth=1;
-    for(let i=0;i<700;i+=40){ctx.beginPath();ctx.moveTo(i,290);ctx.lineTo(i,360);ctx.stroke();}
-    // target ArUco
-    drawAruco(targetX,targetY,56);
-    // target ring
-    ctx.beginPath();ctx.arc(targetX,targetY,35,0,Math.PI*2);
-    ctx.strokeStyle='rgba(26,107,74,.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();
-    ctx.setLineDash([]);
-
-    if(!landed){
-      // P controller
-      const errX=targetX-uavX,errY=targetY-uavY;
-      uavX+=errX*0.025+noise();
-      uavY+=errY*0.02+noise()*0.5;
-      altitude=Math.max(0,altitude-0.025);
-      const dist=Math.sqrt(errX*errX+errY*errY);
-
-      if(altitude<0.15&&dist<8){
-        landed=true;phase='ATTERRI ✓';
-        document.getElementById('u-st').style.color='var(--g)';
-      } else if(altitude<2){phase='FINALE';}
-      else if(dist<60){phase='ALIGNEMENT';}
-      else{phase='APPROCHE';}
-
-      document.getElementById('u-alt').textContent=altitude.toFixed(1)+'m';
-      document.getElementById('u-err').textContent=dist.toFixed(1)+'px';
-      document.getElementById('u-fps').textContent=Math.round(55+Math.random()*10);
-      document.getElementById('u-st').textContent=phase;
-
-      // error line
-      ctx.beginPath();ctx.moveTo(uavX,uavY);ctx.lineTo(targetX,targetY);
-      ctx.strokeStyle='rgba(194,74,26,.4)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    drawDrone(uavX,uavY);
-
-    // altitude indicator
-    ctx.fillStyle='rgba(26,107,74,.06)';ctx.fillRect(660,20,20,260);
-    const altH=Math.min(altitude/10,1)*240;
-    ctx.fillStyle='rgba(26,107,74,.6)';ctx.fillRect(660,260-altH,20,altH);
-    ctx.fillStyle='var(--ink4)';ctx.font='8px Space Mono';ctx.textAlign='center';
-    ctx.fillText('ALT',670,15);
-
-    if(!landed)rafId=requestAnimationFrame(animUAV);
-    else{
-      document.getElementById('u-alt').textContent='0.0m';
-      document.getElementById('u-err').textContent='0.0px';
-    }
-  }
-  animUAV();
 }
 
 // ── UNET ARCHITECTURE DEMO ──
