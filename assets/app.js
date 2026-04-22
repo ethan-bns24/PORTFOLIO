@@ -184,7 +184,7 @@ const I18N={
             "<strong>Résultat</strong> accuracy 97,65%, F1 97,59%, precision 100%."
           ],
           stack:"PyTorch · U-Net · SE-Blocks · OpenCV",
-          actions:["Voir la démo","Notebook source ↗"]
+          actions:["Voir le notebook","Notebook source ↗"]
         },
         {
           meta:"ROBOTIQUE / EMBARQUÉ",
@@ -224,7 +224,7 @@ const I18N={
           links:["Notebook source ↗"],
           metric:"Accuracy 97,65% · F1 97,59% · Precision 100%",
           tags:["PyTorch","U-Net","SE-Blocks","OpenCV"],
-          cta:"EXPLORER LA DÉMO INTERACTIVE"
+          cta:"OUVRIR LE NOTEBOOK"
         },
         {
           num:"P.002 · CLIQUER POUR LA DÉMO ↗",
@@ -597,7 +597,7 @@ const I18N={
             "<strong>Outcome</strong> 97.65% accuracy, 97.59% F1, 100% precision."
           ],
           stack:"PyTorch · U-Net · SE-Blocks · OpenCV",
-          actions:["View demo","Source notebook ↗"]
+          actions:["View notebook","Source notebook ↗"]
         },
         {
           meta:"ROBOTICS / EMBEDDED",
@@ -637,7 +637,7 @@ const I18N={
           links:["Source notebook ↗"],
           metric:"Accuracy 97.65% · F1 97.59% · Precision 100%",
           tags:["PyTorch","U-Net","SE-Blocks","OpenCV"],
-          cta:"OPEN THE INTERACTIVE DEMO"
+          cta:"OPEN THE NOTEBOOK"
         },
         {
           num:"P.002 · CLICK FOR DEMO ↗",
@@ -1474,8 +1474,8 @@ if(reducedMotionQuery.matches){
 const overlay=document.getElementById('demo-overlay');
 const demoBody=document.getElementById('demo-body');
 const demoTitle=document.getElementById('demo-title');
+const crackNotebookDemo='crack-detection-demo.ipynb';
 const uavLandingDemoGif='uav-landing-demo.gif';
-const uavLandingPoster='media/uav-landing-poster.png';
 let lastFocusedElement=null;
 function closeDemoOverlay(){
   currentDemo=null;
@@ -1506,6 +1506,11 @@ document.querySelectorAll('.pc a').forEach(link=>{
 document.querySelectorAll('.pc[data-demo]').forEach(card=>{
   if(card.dataset.demo==='none')return;
   const openCardDemo=()=>{
+    if(card.dataset.demo==='edge'){
+      trackEvent('crack-notebook-open');
+      window.open(crackNotebookDemo,'_blank','noopener,noreferrer');
+      return;
+    }
     openDemoOverlay(card.dataset.demo,card);
   };
   card.addEventListener('click',openCardDemo);
@@ -1613,10 +1618,7 @@ function launchUAVDemo(){
   demoTitle.textContent=copy.title;
   demoBody.innerHTML=`
     <div class="uavdemo">
-      <button type="button" id="uav-load" class="uav-load" aria-label="${copy.load}">
-        <img src="${uavLandingPoster}" alt="${copy.alt}" loading="lazy" decoding="async" width="854" height="480">
-        <span class="uav-load-badge">${copy.load}</span>
-      </button>
+      <img src="${uavLandingDemoGif}" alt="${copy.alt}" loading="lazy" decoding="async" width="854" height="480">
       <div class="uav-info">
         <div class="uav-stat"><div class="uav-stat-n">95%</div><div class="uav-stat-l">RÉUSSITE</div></div>
         <div class="uav-stat"><div class="uav-stat-n">cm</div><div class="uav-stat-l">PRÉCISION</div></div>
@@ -1632,10 +1634,6 @@ function launchUAVDemo(){
     </div>`;
   demoBody.querySelectorAll('.uav-stat-l').forEach((el,i)=>{el.textContent=copy.stats[i];});
   demoBody.querySelector('.quick-link').textContent=copy.link;
-  demoBody.querySelector('#uav-load').addEventListener('click',()=>{
-    trackEvent('uav-demo-load-heavy-media');
-    demoBody.querySelector('#uav-load').outerHTML=`<img src="${uavLandingDemoGif}" alt="${copy.alt}" loading="lazy" decoding="async" width="854" height="480">`;
-  },{once:true});
 }
 
 // ── UNET ARCHITECTURE DEMO ──
