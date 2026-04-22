@@ -52,6 +52,11 @@ nav{position:fixed;top:1px;left:0;right:0;z-index:500;display:flex;justify-conte
 .nav-links{display:flex;gap:2rem;list-style:none;}
 .nav-links a{font-family:'Space Mono',monospace;font-size:10px;color:var(--ink3);text-decoration:none;letter-spacing:.1em;transition:color .2s;}
 .nav-links a:hover,.nav-links a.active{color:var(--g);}
+.nav-actions{display:flex;align-items:center;gap:.75rem;}
+.lang-toggle{display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.72);}
+.lang-toggle button{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--ink4);background:transparent;border:none;padding:6px 10px;border-radius:999px;cursor:none;transition:all .2s;}
+.lang-toggle button.active{background:var(--g);color:#fff;}
+.lang-toggle button:not(.active):hover{color:var(--g);}
 .nav-badge{font-family:'Space Mono',monospace;font-size:9px;background:var(--g3);border:1px solid var(--border);color:var(--g);padding:6px 14px;border-radius:2px;letter-spacing:.1em;text-decoration:none;display:flex;align-items:center;gap:8px;transition:background .2s;}
 .nav-badge::before{content:'';width:6px;height:6px;background:var(--g);border-radius:50%;animation:blink 1.5s infinite;}
 .nav-badge:hover{background:rgba(26,107,74,.18);}
@@ -134,7 +139,8 @@ nav{position:fixed;top:1px;left:0;right:0;z-index:500;display:flex;justify-conte
 #projects{padding:7rem 2.5rem;background:var(--bg2);}
 .proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:3rem;}
 .pc{background:var(--bg3);border:1px solid var(--border2);padding:2rem;display:flex;flex-direction:column;transition:all .3s;position:relative;overflow:hidden;cursor:pointer;}
-.pc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,107,74,.03),transparent);opacity:0;transition:opacity .3s;}
+.pc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,107,74,.03),transparent);opacity:0;transition:opacity .3s;pointer-events:none;}
+.pc > *{position:relative;z-index:1;}
 .pc:hover::before{opacity:1;}
 .pc:hover{border-color:var(--border);transform:translateY(-2px);box-shadow: 0 10px 30px rgba(0,0,0,0.03);}
 .pc-num{font-family:'Space Mono',monospace;font-size:9px;color:var(--ink4);letter-spacing:.12em;margin-bottom:1.25rem;}
@@ -295,6 +301,7 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
 @media(max-width:900px){
   nav{padding:1rem 1.5rem;}
   .nav-links,.nav-badge{display:none;}
+  .nav-actions{gap:0;}
   .hero-content{grid-template-columns:1fr;}
   .hero-right{display:none;}
   .hero-proof{max-width:none;}
@@ -348,7 +355,13 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
     <li><a href="#skills" data-s="skills">Compétences</a></li>
     <li><a href="#learn" data-s="learn">Lab</a></li>
   </ul>
-  <a href="mailto:binisti.ethan@yahoo.fr" class="nav-badge">DISPONIBLE CDI</a>
+  <div class="nav-actions">
+    <div class="lang-toggle" id="lang-toggle" role="group" aria-label="Choisir la langue">
+      <button type="button" data-lang="fr" class="active">FR</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <a href="mailto:binisti.ethan@yahoo.fr" class="nav-badge">DISPONIBLE CDI</a>
+  </div>
 </nav>
 
 <section id="hero">
@@ -725,6 +738,828 @@ window.addEventListener('scroll',()=>{
   nas.forEach(a=>a.classList.toggle('active',a.dataset.s===cur2));
 },{passive:true});
 
+const localeStoreKey='portfolio-lang';
+let currentLang=localStorage.getItem(localeStoreKey)==='en'?'en':'fr';
+let currentDemo=null;
+let resetTerminalView=()=>{};
+let redrawRadarChart=()=>{};
+
+const I18N={
+  fr:{
+    meta:{
+      title:"Ethan Binisti — Ingénieur R&D",
+      description:"Portfolio d'Ethan Binisti, ingénieur R&D orienté computer vision, simulation numérique et systèmes embarqués.",
+      ogLocale:"fr_FR",
+      twitterDescription:"Portfolio orienté vision, simulation et embarqué."
+    },
+    nav:{
+      links:["Profil","Expérience","Projets","Compétences","Lab"],
+      badge:"DISPONIBLE CDI",
+      toggleLabel:"Choisir la langue"
+    },
+    hero:{
+      tag:"INGÉNIEUR R&D · ESILV 2026",
+      desc:"Ingénieur R&D orienté computer vision, simulation numérique et systèmes embarqués. Je construis des prototypes techniques solides, mesurables, et vite exploitables en entreprise.",
+      pills:["CDI IMMÉDIAT","VISION · SIMULATION · EMBARQUÉ","PROJETS MESURÉS ET DOCUMENTÉS"],
+      actions:["Explorer le profil →","📄 Télécharger mon CV"],
+      stats:[
+        "ACCURACY<br>U-NET CRACK DETECTION",
+        "RÉUSSITE<br>ATTERRISSAGE UAV",
+        "IMAGES<br>ENTRAÎNEMENT PYTORCH",
+        "PRECISION<br>SUR VALIDATION"
+      ]
+    },
+    terminalIntro:{
+      section:"01 — PROFIL INTERACTIF",
+      heading:"Tape une commande<br>pour me <em>découvrir.</em>",
+      body:`Un terminal interactif pour explorer mon profil de façon non linéaire. Commence par <code style="font-family:'Space Mono',monospace;color:var(--g);font-size:.9rem;">help</code> pour voir les commandes disponibles.`,
+      commandsLabel:"COMMANDES :",
+      quick:["Voir les projets","Me contacter","Ouvrir le CV"]
+    },
+    experience:{
+      section:"02 — EXPÉRIENCE",
+      heading:"Ce que j'ai <em>construit.</em>",
+      cards:[
+        {
+          year:"2024 → 2026 · 2 ANS",
+          role:"Apprenti Ingénieur R&D — Simulation Mécanique",
+          badge:"COLLÉGIEN, FR",
+          where:"Souchier-Boullet · Soprema Group",
+          tasks:[
+            "<strong>~100 procédures stockées SQL</strong> et 5 configurateurs métier avec règles métiers, contrôles de cohérence, traduction automatique",
+            "Modélisation d'assemblages paramétriques, harmonisation nomenclatures/matériaux",
+            "Interface conditionnelle optimisée sous <strong>Design Studio</strong>"
+          ],
+          tags:["T-SQL","Design Studio","CAO Paramétrique","Abaqus"]
+        },
+        {
+          year:"ÉTÉ 2025 · 3 MOIS",
+          role:"Stagiaire Recherche — Vision & Deep Learning",
+          badge:"HANOI, VIETNAM",
+          where:"USTH — Université des Sciences et Technologies de Hanoi",
+          tasks:[
+            "Pipeline ROS/PX4 pour atterrissage autonome UAV : détection ArUco, pose estimation solvePnP, consignes MAVLink — <strong>95% réussite, précision centimétrique, ~60 FPS</strong>",
+            "Segmentation de fissures : <strong>U-Net + SE-Blocks (PyTorch)</strong> sur ~40 000 images — accuracy 97,65%, F1 97,59%, precision 100%",
+            "Containerisation Docker, versioning GitHub, documentation complète"
+          ],
+          tags:["PyTorch","ROS Noetic","OpenCV","PX4","U-Net","Docker"]
+        },
+        {
+          year:"2023 → 2026 · 3 ANS",
+          role:"Projets Académiques — IoT & Simulation",
+          badge:"PARIS-LA DÉFENSE",
+          where:"ESILV — École d'ingénieurs Léonard de Vinci",
+          tasks:[
+            "<strong>EV-APP</strong> : optimisation de conduite VE en Python avec ML, validée sur profils réels",
+            "<strong>Pullman Concept Room (Accor)</strong> : chambre intelligente BLE + iOS + Raspberry Pi (GRMS)"
+          ],
+          tags:["Python ML","BLE","Raspberry Pi","iOS"]
+        }
+      ]
+    },
+    projects:{
+      section:"03 — PROJETS",
+      heading:"Clique pour une <em>démo interactive.</em>",
+      cards:[
+        {
+          num:"P.001 · CLIQUER POUR LA DÉMO ↗",
+          title:"Détection de Fissures — U-Net",
+          desc:"Segmentation sémantique pour inspection structurelle. U-Net + Squeeze-and-Excitation sur ~40 000 images.",
+          proof:`<strong>RÔLE</strong> pipeline d'entraînement et d'évaluation complet · <strong>PREUVE</strong> métriques de validation publiées`,
+          links:["Notebook de démo ↗"],
+          metric:"Accuracy 97,65% · F1 97,59% · Precision 100%",
+          tags:["PyTorch","U-Net","SE-Blocks","OpenCV"],
+          cta:"OUVRIR LE NOTEBOOK DE DÉMO"
+        },
+        {
+          num:"P.002 · CLIQUER POUR LA DÉMO ↗",
+          title:"Atterrissage Autonome UAV",
+          desc:"Pipeline ROS/PX4 complet. Détection ArUco, estimation de pose 6DOF (solvePnP), consignes MAVLink.",
+          proof:`<strong>RÔLE</strong> vision, pose estimation et boucle de guidage · <strong>IMPACT</strong> atterrissage centimétrique temps réel`,
+          links:["Repo GitHub ↗"],
+          metric:"95% de réussite · Précision centimétrique · ~60 FPS",
+          tags:["ROS Noetic","PX4","OpenCV","MAVLink"],
+          cta:"VOIR LA DÉMO RÉELLE D'ATTERRISSAGE"
+        },
+        {
+          num:"P.003 · CLIQUER POUR LA DÉMO ↗",
+          title:"Architecture U-Net Visualisée",
+          desc:"Visualisation interactive de l'architecture U-Net utilisée dans le projet fissures — encoder, decoder, skip connections.",
+          proof:`<strong>RÔLE</strong> vulgarisation technique et visualisation interactive · <strong>USAGE</strong> rendre le modèle lisible en 30 secondes`,
+          links:[],
+          metric:"Réseau profond · Skip connections · SE attention",
+          tags:["Architecture DL","Visualization","Pédagogie"],
+          cta:"EXPLORER L'ARCHITECTURE"
+        },
+        {
+          title:"Pullman Concept Room — Accor",
+          desc:"Chambre intelligente BLE sécurisée, application iOS, Raspberry Pi (GRMS). Partenariat Accor.",
+          proof:`<strong>RÔLE</strong> logique d'identification et intégration IoT · <strong>CONTEXTE</strong> projet réel avec contrainte métier`,
+          metric:"Partenariat Accor · BLE sécurisé · IoT",
+          tags:["BLE","iOS Swift","Raspberry Pi","GRMS"],
+          cta:"github.com/ethan-bns24/Pullman-Concept-Room ↗"
+        },
+        {
+          title:"EV-APP — Optimisation VE",
+          desc:"Application mobile Python pour optimiser la conduite en véhicule électrique. Validée sur profils de conduite réels.",
+          proof:`<strong>RÔLE</strong> modélisation ML et logique applicative · <strong>PREUVE</strong> validation sur données de conduite`,
+          metric:"ML embarqué · Profils réels validés",
+          tags:["Python","ML","Mobile","Énergie"],
+          cta:"github.com/ethan-bns24/EV-APP ↗"
+        },
+        {
+          title:"Open Source — GitHub",
+          desc:"Projets ML, outils web et algorithmes développés sur temps libre. Tout est documenté et publié.",
+          proof:`<strong>SIGNAL</strong> curiosité technique durable · <strong>FORMAT</strong> code public, versionné et réutilisable`,
+          metric:"Public · Documenté · Autodidacte",
+          tags:["Python","C/C++","Web","ML"],
+          cta:"Voir tous les repos ↗"
+        }
+      ]
+    },
+    skills:{
+      section:"04 — COMPÉTENCES",
+      heading:"Stack <em>technique.</em>",
+      groups:["PROGRAMMATION","DEEP LEARNING & VISION","ROBOTIQUE & SIMULATION"],
+      names:[
+        "Python (NumPy, SciPy, ML)",
+        "SQL — T-SQL / MySQL",
+        "C / C++",
+        "Docker / Git",
+        "PyTorch",
+        "Computer Vision / OpenCV",
+        "Architectures DL (U-Net, SE)",
+        "ROS / PX4 / MAVLink",
+        "FEM — Abaqus / ANSYS",
+        "CFD — ANSYS Fluent"
+      ],
+      radar:{
+        labels:["Python","Deep Learning","Vision","Robotique","FEM/CFD","CAO"]
+      }
+    },
+    learn:{
+      section:"05 — LAB",
+      heading:"Ce que tu peux <em>apprendre ici.</em>",
+      cards:[
+        {
+          title:"Comment fonctionne un U-Net ?",
+          body:`Un U-Net est une architecture de réseau de neurones en forme de U. L'<strong>encodeur</strong> compresse l'image progressivement, le <strong>décodeur</strong> la reconstruit. Les <strong>skip connections</strong> transmettent les détails fins entre les deux, permettant une segmentation au pixel près. Les blocs <strong>Squeeze-and-Excitation</strong> ajoutent une attention sur les canaux les plus importants.`,
+          tag:"// DEEP LEARNING"
+        },
+        {
+          title:"Comment un drone atterrit-il seul ?",
+          body:`Mon pipeline utilise des <strong>marqueurs ArUco</strong> imprimés au sol. La caméra les détecte via OpenCV, puis <strong>solvePnP</strong> calcule la position exacte du drone dans l'espace 3D. Des consignes sont envoyées au pilote automatique <strong>PX4 via MAVLink</strong> pour corriger la trajectoire en temps réel.`,
+          tag:"// ROBOTIQUE UAV"
+        },
+        {
+          title:"C'est quoi la méthode des éléments finis ?",
+          body:`La FEM découpe une pièce mécanique en milliers de petits éléments géométriques (<strong>maillage</strong>). Sur chacun, des équations simplifiées décrivent comment il se déforme sous une force. En assemblant ces solutions locales, on obtient une simulation globale réaliste sans tester physiquement la pièce.`,
+          tag:"// SIMULATION FEA"
+        },
+        {
+          title:"Bluetooth Low Energy en 30 secondes",
+          body:`Le <strong>BLE</strong> est une version ultra-économe du Bluetooth classique. Au lieu de maintenir une connexion constante, il envoie de petits paquets de données à la demande. Parfait pour les <strong>IoT</strong> : une batterie peut tenir des années. Dans mon projet Pullman Concept Room, il sert à identifier de façon sécurisée un client d'hôtel à l'approche de sa chambre.`,
+          tag:"// IOT / EMBARQUÉ"
+        },
+        {
+          title:"Optimiser la conduite d'un VE avec le ML",
+          body:`Un véhicule électrique consomme différemment selon la vitesse, la pente, la température ou le freinage. Mon app EV-APP entraîne un modèle ML sur des <strong>profils de conduite réels</strong> pour prédire la consommation future et suggérer des adaptations. Résultat : jusqu'à 15% d'autonomie gagnée.`,
+          tag:"// MACHINE LEARNING"
+        },
+        {
+          title:"Easter Egg",
+          body:`Essaie le <strong>Konami Code</strong> sur cette page :<br>↑ ↑ ↓ ↓ ← → ← → B A<br><br>ou utilise un clavier.`,
+          tag:"// HIDDEN FEATURE"
+        }
+      ]
+    },
+    contact:{
+      section:"06 — CONTACT",
+      heading:"Travaillons<br><em>ensemble.</em>",
+      sub:"Je recherche un CDI où les problèmes difficiles sont la norme. Disponible pour un entretien à tout moment.",
+      labels:["EMAIL","TÉL","LINKEDIN","GITHUB"]
+    },
+    footer:{
+      copyright:"© 2026 ETHAN BINISTI · PORTFOLIO",
+      links:["Profil","Expérience","Projets","Compétences","Contact"]
+    },
+    konami:{
+      title:"// EASTER EGG UNLOCKED 🎉",
+      body:`Tu as trouvé le Konami Code (↑↑↓↓←→←→BA).<br>Voici un automate cellulaire de Conway's Game of Life — le même type de système que j'étudie en simulation numérique.`,
+      close:"[ FERMER ]"
+    },
+    terminal:{
+      welcome:{
+        intro:"Bienvenue sur le portfolio interactif d'Ethan Binisti",
+        action:"Tape",
+        suffix:"pour commencer"
+      },
+      help:[
+        {t:"out",s:"Commandes disponibles :"},
+        {t:"hi",s:"  whoami      → qui suis-je ?"},
+        {t:"hi",s:"  skills      → mes compétences techniques"},
+        {t:"hi",s:"  projects    → mes projets clés"},
+        {t:"hi",s:"  stats       → mes métriques clés"},
+        {t:"hi",s:"  education   → ma formation"},
+        {t:"hi",s:"  contact     → me contacter"},
+        {t:"hi",s:"  fun         → anecdote aléatoire"},
+        {t:"hi",s:"  clear       → effacer le terminal"},
+        {t:"dim",s:"─────────────────────────────────────"}
+      ],
+      whoami:[
+        {t:"success",s:"> Ethan Binisti, 23 ans"},
+        {t:"out",s:"  Ingénieur mécanique (ESILV, Master 2026)"},
+        {t:"out",s:"  Spécialisé en simulation numérique, embarqué, deep learning"},
+        {t:"out",s:"  Autodidacte passionné — robotique & IA apprises en dehors de l'école"},
+        {t:"out",s:"  Professeur particulier en maths/physique depuis 3 ans"},
+        {t:"dim",s:'  "Apprendre vite sur des sujets difficiles est une compétence"'}
+      ],
+      skills:[
+        {t:"hi",s:"── Programmation ──────────────────"},
+        {t:"out",s:"  Python         ████████████░░  93%"},
+        {t:"out",s:"  SQL (T-SQL)    ██████████░░░░  82%"},
+        {t:"out",s:"  C / C++        █████████░░░░░  70%"},
+        {t:"hi",s:"── Deep Learning ─────────────────"},
+        {t:"out",s:"  PyTorch        ███████████░░░  88%"},
+        {t:"out",s:"  OpenCV         ██████████░░░░  84%"},
+        {t:"out",s:"  U-Net / SE     ██████████░░░░  83%"},
+        {t:"hi",s:"── Robotique / Simulation ───────"},
+        {t:"out",s:"  ROS / PX4      ██████████░░░░  80%"},
+        {t:"out",s:"  Abaqus / FEM   ██████████░░░░  80%"},
+        {t:"out",s:"  ANSYS Fluent   █████████░░░░░  72%"}
+      ],
+      projects:[
+        {t:"hi",s:"[1] Détection de fissures — U-Net (PyTorch)"},
+        {t:"out",s:"    Accuracy 97.65% · F1 97.59% · Precision 100%"},
+        {t:"hi",s:"[2] Atterrissage autonome UAV — ROS/PX4"},
+        {t:"out",s:"    95% réussite · centimétrique · ~60 FPS"},
+        {t:"hi",s:"[3] EV-APP — Optimisation VE (Python ML)"},
+        {t:"out",s:"    Validé sur profils réels de conduite"},
+        {t:"hi",s:"[4] Pullman Concept Room — Accor (BLE + iOS)"},
+        {t:"out",s:"    Authentification BLE sécurisée"},
+        {t:"dim",s:"→ github.com/ethan-bns24"}
+      ],
+      stats:[
+        {t:"success",s:"KEY METRICS ──────────────────────"},
+        {t:"out",s:"  97.65%  Accuracy U-Net (crack detection)"},
+        {t:"out",s:"  97.59%  F1-score sur le même modèle"},
+        {t:"out",s:"  100%    Precision sur jeu de validation"},
+        {t:"out",s:"  95%     Taux réussite atterrissage UAV"},
+        {t:"out",s:"  ~60 FPS Pipeline UAV temps réel"},
+        {t:"out",s:"  40 000  Images d'entraînement PyTorch"},
+        {t:"out",s:"  ~100    Procédures SQL déployées (Soprema)"}
+      ],
+      education:[
+        {t:"hi",s:"[2023 → 2026] ESILV Paris-La Défense"},
+        {t:"out",s:"  Master Ingénierie Mécanique & Modélisation Numérique"},
+        {t:"out",s:"  FEA · CFD · ML · Composite · Aeroelasticity · Digital Twins"},
+        {t:"hi",s:"[2021 → 2023] Lycée d'Arsonval, Saint-Maur"},
+        {t:"out",s:"  Classes Prépa PCSI / PSI*"},
+        {t:"out",s:"  Maths · Physique · Chimie · Sciences industrielles"},
+        {t:"dim",s:"  TOEIC : 800 pts (Anglais B2+)"}
+      ],
+      contact:[
+        {t:"success",s:"CONTACT ─────────────────────────"},
+        {t:"out",s:"  email    binisti.ethan@yahoo.fr"},
+        {t:"out",s:"  tel      07 67 46 45 65"},
+        {t:"out",s:"  linkedin linkedin.com/in/ethan-binisti"},
+        {t:"out",s:"  github   github.com/ethan-bns24"},
+        {t:"dim",s:"  → Disponible pour un CDI immédiatement"}
+      ],
+      facts:[
+        [
+          {t:"hi",s:"// ANECDOTE #1"},
+          {t:"out",s:"Le réseau U-Net a été créé en 2015 pour la segmentation médicale."},
+          {t:"out",s:"Je l'ai adapté pour détecter des fissures structurelles avec 97.65% d'accuracy."}
+        ],
+        [
+          {t:"hi",s:"// ANECDOTE #2"},
+          {t:"out",s:'ArUco vient de "Augmented Reality University of Cordoba".'},
+          {t:"out",s:"Ce sont des QR codes spécialisés pour la vision par ordinateur 3D."}
+        ],
+        [
+          {t:"hi",s:"// ANECDOTE #3"},
+          {t:"out",s:"MAVLink est utilisé par la plupart des drones commerciaux et militaires."},
+          {t:"out",s:"Mon pipeline l'utilise pour envoyer des consignes au pilote automatique PX4."}
+        ],
+        [
+          {t:"hi",s:"// ANECDOTE #4"},
+          {t:"out",s:"Konami Code : ↑↑↓↓←→←→BA — essaie-le sur cette page ;)"}
+        ]
+      ],
+      commandNotFound:'command not found: ',
+      helpHint:' (try "help")'
+    },
+    demos:{
+      edge:{
+        title:"// DEMO — DÉTECTION DE CONTOURS (STYLE OPENCV)",
+        original:"IMAGE ORIGINALE",
+        result:"DÉTECTION DE CONTOURS",
+        low:"SEUIL BAS :",
+        high:"SEUIL HAUT :",
+        regen:"NOUVELLE IMAGE",
+        explain:`<strong style="color:var(--g);">Comment ça marche ?</strong> La détection de contours Canny fonctionne en 3 étapes : (1) flou gaussien pour réduire le bruit, (2) calcul du gradient d'intensité, (3) suppression des non-maxima et double seuillage. Les sliders contrôlent les seuils : plus ils sont bas, plus de détails sont capturés.`
+      },
+      uav:{
+        title:"// DEMO — ATTERRISSAGE UAV AUTONOME",
+        alt:"Démo réelle d'atterrissage autonome UAV",
+        stats:["RÉUSSITE","PRÉCISION","FPS","STACK"],
+        explain:`<strong style="color:var(--g);">Démo réelle :</strong> ce GIF montre l'atterrissage autonome avec détection du marqueur <strong>ArUco</strong>, estimation de pose via <strong>solvePnP</strong> et corrections envoyées à <strong>PX4</strong> via <strong>MAVLink</strong>. C'est la démo terrain du projet, pas une animation reconstituée.`,
+        link:"Voir le repo GitHub"
+      },
+      net:{
+        title:"// ARCHITECTURE U-NET — VISUALISATION INTERACTIVE",
+        explain:`<strong style="color:var(--g);">Survole les blocs</strong> pour comprendre leur rôle. L'<strong>encodeur</strong> compresse l'image en représentations abstraites. Le <strong>décodeur</strong> reconstruit la segmentation pixel par pixel. Les <strong>skip connections</strong> transmettent les détails fins. Les blocs <strong>SE</strong> recalibrent les canaux importants.`,
+        layers:["Entrée\n256×256","Conv\n128×128","Conv\n64×64","Conv\n32×32","Bridge\n16×16","Up\n32×32","Up\n64×64","Up\n128×128","Sortie\n256×256"],
+        tooltips:[
+          "Entrée : image 256×256 pixels (niveaux de gris)",
+          "Encodeur : convolutions + pooling, extrait les caractéristiques",
+          "Encodeur : représentations plus abstraites, résolution réduite",
+          "Encodeur : features haute abstraction, 32×32",
+          "Bottleneck : représentation la plus comprimée + blocs SE (attention)",
+          "Décodeur : upsampling + skip connection",
+          "Décodeur : reconstruction progressive de la segmentation",
+          "Décodeur : segmentation quasi-finale 128×128",
+          "Sortie : masque de segmentation — chaque pixel = fissure ou non"
+        ],
+        legend:["Encodeur","Bottleneck + SE","Décodeur","Sortie"],
+        skip:"skip connection"
+      }
+    }
+  },
+  en:{
+    meta:{
+      title:"Ethan Binisti — R&D Engineer",
+      description:"Portfolio of Ethan Binisti, an R&D engineer focused on computer vision, numerical simulation, and embedded systems.",
+      ogLocale:"en_US",
+      twitterDescription:"Portfolio focused on vision, simulation, and embedded systems."
+    },
+    nav:{
+      links:["Profile","Experience","Projects","Skills","Lab"],
+      badge:"OPEN TO FULL-TIME",
+      toggleLabel:"Choose language"
+    },
+    hero:{
+      tag:"R&D ENGINEER · ESILV 2026",
+      desc:"R&D engineer focused on computer vision, numerical simulation, and embedded systems. I build strong technical prototypes that are measurable and quickly usable in industry.",
+      pills:["AVAILABLE NOW","VISION · SIMULATION · EMBEDDED","MEASURED AND DOCUMENTED PROJECTS"],
+      actions:["Explore profile →","📄 Download resume"],
+      stats:[
+        "ACCURACY<br>U-NET CRACK DETECTION",
+        "SUCCESS RATE<br>UAV LANDING",
+        "IMAGES<br>PYTORCH TRAINING",
+        "PRECISION<br>ON VALIDATION"
+      ]
+    },
+    terminalIntro:{
+      section:"01 — INTERACTIVE PROFILE",
+      heading:"Type a command<br>to <em>explore.</em>",
+      body:`An interactive terminal to explore my profile in a non-linear way. Start with <code style="font-family:'Space Mono',monospace;color:var(--g);font-size:.9rem;">help</code> to see the available commands.`,
+      commandsLabel:"COMMANDS:",
+      quick:["View projects","Contact me","Open resume"]
+    },
+    experience:{
+      section:"02 — EXPERIENCE",
+      heading:"What I have <em>built.</em>",
+      cards:[
+        {
+          year:"2024 → 2026 · 2 YEARS",
+          role:"R&D Engineer Apprentice — Mechanical Simulation",
+          badge:"COLLEGIEN, FRANCE",
+          where:"Souchier-Boullet · Soprema Group",
+          tasks:[
+            "<strong>~100 SQL stored procedures</strong> and 5 business configurators with business rules, consistency checks, and automatic translation",
+            "Parametric assembly modeling, bill-of-materials and material harmonization",
+            "Optimized conditional interface in <strong>Design Studio</strong>"
+          ],
+          tags:["T-SQL","Design Studio","Parametric CAD","Abaqus"]
+        },
+        {
+          year:"SUMMER 2025 · 3 MONTHS",
+          role:"Research Intern — Vision & Deep Learning",
+          badge:"HANOI, VIETNAM",
+          where:"USTH — University of Science and Technology of Hanoi",
+          tasks:[
+            "ROS/PX4 pipeline for autonomous UAV landing: ArUco detection, solvePnP pose estimation, MAVLink commands — <strong>95% success rate, centimeter-level precision, ~60 FPS</strong>",
+            "Crack segmentation: <strong>U-Net + SE-Blocks (PyTorch)</strong> on ~40,000 images — 97.65% accuracy, 97.59% F1, 100% precision",
+            "Docker containerization, GitHub versioning, full documentation"
+          ],
+          tags:["PyTorch","ROS Noetic","OpenCV","PX4","U-Net","Docker"]
+        },
+        {
+          year:"2023 → 2026 · 3 YEARS",
+          role:"Academic Projects — IoT & Simulation",
+          badge:"PARIS-LA DÉFENSE",
+          where:"ESILV — Léonard de Vinci Graduate School of Engineering",
+          tasks:[
+            "<strong>EV-APP</strong>: EV driving optimization in Python with ML, validated on real driving profiles",
+            "<strong>Pullman Concept Room (Accor)</strong>: secure smart room with BLE + iOS + Raspberry Pi (GRMS)"
+          ],
+          tags:["Python ML","BLE","Raspberry Pi","iOS"]
+        }
+      ]
+    },
+    projects:{
+      section:"03 — PROJECTS",
+      heading:"Click for an <em>interactive demo.</em>",
+      cards:[
+        {
+          num:"P.001 · CLICK FOR DEMO ↗",
+          title:"Crack Detection — U-Net",
+          desc:"Semantic segmentation for structural inspection. U-Net + Squeeze-and-Excitation on ~40,000 images.",
+          proof:`<strong>ROLE</strong> full training and evaluation pipeline · <strong>PROOF</strong> published validation metrics`,
+          links:["Demo notebook ↗"],
+          metric:"Accuracy 97.65% · F1 97.59% · Precision 100%",
+          tags:["PyTorch","U-Net","SE-Blocks","OpenCV"],
+          cta:"OPEN THE DEMO NOTEBOOK"
+        },
+        {
+          num:"P.002 · CLICK FOR DEMO ↗",
+          title:"Autonomous UAV Landing",
+          desc:"Full ROS/PX4 pipeline. ArUco detection, 6DOF pose estimation (solvePnP), MAVLink commands.",
+          proof:`<strong>ROLE</strong> vision, pose estimation, and guidance loop · <strong>IMPACT</strong> real-time centimeter-level landing`,
+          links:["GitHub repo ↗"],
+          metric:"95% success rate · Centimeter precision · ~60 FPS",
+          tags:["ROS Noetic","PX4","OpenCV","MAVLink"],
+          cta:"WATCH THE REAL LANDING DEMO"
+        },
+        {
+          num:"P.003 · CLICK FOR DEMO ↗",
+          title:"Visualized U-Net Architecture",
+          desc:"Interactive visualization of the U-Net architecture used in the crack detection project — encoder, decoder, skip connections.",
+          proof:`<strong>ROLE</strong> technical explanation and interactive visualization · <strong>USE</strong> make the model readable in 30 seconds`,
+          links:[],
+          metric:"Deep network · Skip connections · SE attention",
+          tags:["DL Architecture","Visualization","Teaching"],
+          cta:"EXPLORE THE ARCHITECTURE"
+        },
+        {
+          title:"Pullman Concept Room — Accor",
+          desc:"Secure BLE smart room, iOS app, Raspberry Pi (GRMS). Accor partnership.",
+          proof:`<strong>ROLE</strong> identification logic and IoT integration · <strong>CONTEXT</strong> real project with business constraints`,
+          metric:"Accor partnership · Secure BLE · IoT",
+          tags:["BLE","iOS Swift","Raspberry Pi","GRMS"],
+          cta:"github.com/ethan-bns24/Pullman-Concept-Room ↗"
+        },
+        {
+          title:"EV-APP — EV Optimization",
+          desc:"Python mobile app to optimize electric vehicle driving. Validated on real driving profiles.",
+          proof:`<strong>ROLE</strong> ML modeling and application logic · <strong>PROOF</strong> validation on driving data`,
+          metric:"Embedded ML · Validated on real profiles",
+          tags:["Python","ML","Mobile","Energy"],
+          cta:"github.com/ethan-bns24/EV-APP ↗"
+        },
+        {
+          title:"Open Source — GitHub",
+          desc:"ML projects, web tools, and algorithms built in my free time. Everything is documented and public.",
+          proof:`<strong>SIGNAL</strong> long-term technical curiosity · <strong>FORMAT</strong> public, versioned, reusable code`,
+          metric:"Public · Documented · Self-taught",
+          tags:["Python","C/C++","Web","ML"],
+          cta:"See all repositories ↗"
+        }
+      ]
+    },
+    skills:{
+      section:"04 — SKILLS",
+      heading:"Technical <em>stack.</em>",
+      groups:["PROGRAMMING","DEEP LEARNING & VISION","ROBOTICS & SIMULATION"],
+      names:[
+        "Python (NumPy, SciPy, ML)",
+        "SQL — T-SQL / MySQL",
+        "C / C++",
+        "Docker / Git",
+        "PyTorch",
+        "Computer Vision / OpenCV",
+        "DL Architectures (U-Net, SE)",
+        "ROS / PX4 / MAVLink",
+        "FEM — Abaqus / ANSYS",
+        "CFD — ANSYS Fluent"
+      ],
+      radar:{
+        labels:["Python","Deep Learning","Vision","Robotics","FEM/CFD","CAD"]
+      }
+    },
+    learn:{
+      section:"05 — LAB",
+      heading:"What you can <em>learn here.</em>",
+      cards:[
+        {
+          title:"How does a U-Net work?",
+          body:`A U-Net is a U-shaped neural network architecture. The <strong>encoder</strong> progressively compresses the image, while the <strong>decoder</strong> reconstructs it. <strong>Skip connections</strong> transfer fine details between both sides for pixel-level segmentation. <strong>Squeeze-and-Excitation</strong> blocks add attention over the most relevant channels.`,
+          tag:"// DEEP LEARNING"
+        },
+        {
+          title:"How does a drone land on its own?",
+          body:`My pipeline uses printed <strong>ArUco markers</strong> on the ground. The camera detects them with OpenCV, then <strong>solvePnP</strong> computes the exact 3D pose of the drone. Commands are sent to the <strong>PX4 autopilot through MAVLink</strong> to correct the trajectory in real time.`,
+          tag:"// UAV ROBOTICS"
+        },
+        {
+          title:"What is the finite element method?",
+          body:`FEM splits a mechanical part into thousands of small geometric elements (<strong>mesh</strong>). On each one, simplified equations describe how it deforms under load. When assembled together, these local solutions produce a realistic global simulation without physically testing the part.`,
+          tag:"// FEA SIMULATION"
+        },
+        {
+          title:"Bluetooth Low Energy in 30 seconds",
+          body:`<strong>BLE</strong> is an ultra-low-power version of classic Bluetooth. Instead of keeping a permanent connection, it sends small packets on demand. Perfect for <strong>IoT</strong>: a watch battery can last for years. In my Pullman Concept Room project, it securely identifies a hotel guest approaching the room.`,
+          tag:"// IOT / EMBEDDED"
+        },
+        {
+          title:"Optimizing EV driving with ML",
+          body:`An electric vehicle behaves differently depending on speed, slope, temperature, or braking. My EV-APP trains an ML model on <strong>real driving profiles</strong> to predict future consumption and suggest adjustments. Result: up to 15% extra range.`,
+          tag:"// MACHINE LEARNING"
+        },
+        {
+          title:"Easter Egg",
+          body:`Try the <strong>Konami Code</strong> on this page:<br>↑ ↑ ↓ ↓ ← → ← → B A<br><br>or use a keyboard.`,
+          tag:"// HIDDEN FEATURE"
+        }
+      ]
+    },
+    contact:{
+      section:"06 — CONTACT",
+      heading:"Let's build<br><em>together.</em>",
+      sub:"I am looking for a full-time role where hard problems are the norm. Available for an interview at any time.",
+      labels:["EMAIL","PHONE","LINKEDIN","GITHUB"]
+    },
+    footer:{
+      copyright:"© 2026 ETHAN BINISTI · PORTFOLIO",
+      links:["Profile","Experience","Projects","Skills","Contact"]
+    },
+    konami:{
+      title:"// EASTER EGG UNLOCKED 🎉",
+      body:`You found the Konami Code (↑↑↓↓←→←→BA).<br>Here is Conway's Game of Life — the same kind of system I study in numerical simulation.`,
+      close:"[ CLOSE ]"
+    },
+    terminal:{
+      welcome:{
+        intro:"Welcome to Ethan Binisti's interactive portfolio",
+        action:"Type",
+        suffix:"to get started"
+      },
+      help:[
+        {t:"out",s:"Available commands:"},
+        {t:"hi",s:"  whoami      → who am I?"},
+        {t:"hi",s:"  skills      → technical skills"},
+        {t:"hi",s:"  projects    → key projects"},
+        {t:"hi",s:"  stats       → key metrics"},
+        {t:"hi",s:"  education   → education"},
+        {t:"hi",s:"  contact     → contact info"},
+        {t:"hi",s:"  fun         → random fact"},
+        {t:"hi",s:"  clear       → clear terminal"},
+        {t:"dim",s:"─────────────────────────────────────"}
+      ],
+      whoami:[
+        {t:"success",s:"> Ethan Binisti, 23 years old"},
+        {t:"out",s:"  Mechanical engineering student (ESILV, MSc 2026)"},
+        {t:"out",s:"  Focused on numerical simulation, embedded systems, and deep learning"},
+        {t:"out",s:"  Self-taught in robotics & AI outside school"},
+        {t:"out",s:"  Private tutor in math and physics for 3 years"},
+        {t:"dim",s:'  "Learning hard things quickly is a skill"'}
+      ],
+      skills:[
+        {t:"hi",s:"── Programming ─────────────────────"},
+        {t:"out",s:"  Python         ████████████░░  93%"},
+        {t:"out",s:"  SQL (T-SQL)    ██████████░░░░  82%"},
+        {t:"out",s:"  C / C++        █████████░░░░░  70%"},
+        {t:"hi",s:"── Deep Learning ─────────────────"},
+        {t:"out",s:"  PyTorch        ███████████░░░  88%"},
+        {t:"out",s:"  OpenCV         ██████████░░░░  84%"},
+        {t:"out",s:"  U-Net / SE     ██████████░░░░  83%"},
+        {t:"hi",s:"── Robotics / Simulation ─────────"},
+        {t:"out",s:"  ROS / PX4      ██████████░░░░  80%"},
+        {t:"out",s:"  Abaqus / FEM   ██████████░░░░  80%"},
+        {t:"out",s:"  ANSYS Fluent   █████████░░░░░  72%"}
+      ],
+      projects:[
+        {t:"hi",s:"[1] Crack detection — U-Net (PyTorch)"},
+        {t:"out",s:"    Accuracy 97.65% · F1 97.59% · Precision 100%"},
+        {t:"hi",s:"[2] Autonomous UAV landing — ROS/PX4"},
+        {t:"out",s:"    95% success rate · centimeter precision · ~60 FPS"},
+        {t:"hi",s:"[3] EV-APP — EV optimization (Python ML)"},
+        {t:"out",s:"    Validated on real driving profiles"},
+        {t:"hi",s:"[4] Pullman Concept Room — Accor (BLE + iOS)"},
+        {t:"out",s:"    Secure BLE authentication"},
+        {t:"dim",s:"→ github.com/ethan-bns24"}
+      ],
+      stats:[
+        {t:"success",s:"KEY METRICS ──────────────────────"},
+        {t:"out",s:"  97.65%  U-Net accuracy (crack detection)"},
+        {t:"out",s:"  97.59%  F1-score on the same model"},
+        {t:"out",s:"  100%    Validation precision"},
+        {t:"out",s:"  95%     UAV landing success rate"},
+        {t:"out",s:"  ~60 FPS Real-time UAV pipeline"},
+        {t:"out",s:"  40,000  PyTorch training images"},
+        {t:"out",s:"  ~100    Deployed SQL procedures (Soprema)"}
+      ],
+      education:[
+        {t:"hi",s:"[2023 → 2026] ESILV Paris-La Défense"},
+        {t:"out",s:"  MSc in Mechanical Engineering & Numerical Modeling"},
+        {t:"out",s:"  FEA · CFD · ML · Composite · Aeroelasticity · Digital Twins"},
+        {t:"hi",s:"[2021 → 2023] Lycée d'Arsonval, Saint-Maur"},
+        {t:"out",s:"  PCSI / PSI* preparatory classes"},
+        {t:"out",s:"  Math · Physics · Chemistry · Industrial sciences"},
+        {t:"dim",s:"  TOEIC: 800 (English B2+)"}
+      ],
+      contact:[
+        {t:"success",s:"CONTACT ─────────────────────────"},
+        {t:"out",s:"  email    binisti.ethan@yahoo.fr"},
+        {t:"out",s:"  phone    07 67 46 45 65"},
+        {t:"out",s:"  linkedin linkedin.com/in/ethan-binisti"},
+        {t:"out",s:"  github   github.com/ethan-bns24"},
+        {t:"dim",s:"  → Available for a full-time role now"}
+      ],
+      facts:[
+        [
+          {t:"hi",s:"// FACT #1"},
+          {t:"out",s:"The U-Net architecture was created in 2015 for medical segmentation."},
+          {t:"out",s:"I adapted it to detect structural cracks with 97.65% accuracy."}
+        ],
+        [
+          {t:"hi",s:"// FACT #2"},
+          {t:"out",s:'ArUco comes from "Augmented Reality University of Cordoba".'},
+          {t:"out",s:"These are specialized markers for 3D computer vision."}
+        ],
+        [
+          {t:"hi",s:"// FACT #3"},
+          {t:"out",s:"MAVLink is used by most commercial and military drones."},
+          {t:"out",s:"My pipeline uses it to send commands to the PX4 autopilot."}
+        ],
+        [
+          {t:"hi",s:"// FACT #4"},
+          {t:"out",s:"Konami Code: ↑↑↓↓←→←→BA — try it on this page ;)"}
+        ]
+      ],
+      commandNotFound:"command not found: ",
+      helpHint:' (try "help")'
+    },
+    demos:{
+      edge:{
+        title:"// DEMO — EDGE DETECTION (OPENCV STYLE)",
+        original:"ORIGINAL IMAGE",
+        result:"EDGE DETECTION",
+        low:"LOW THRESHOLD:",
+        high:"HIGH THRESHOLD:",
+        regen:"NEW IMAGE",
+        explain:`<strong style="color:var(--g);">How does it work?</strong> Canny edge detection works in 3 steps: (1) Gaussian blur to reduce noise, (2) intensity gradient computation, (3) non-maximum suppression and double thresholding. The sliders control the thresholds: the lower they are, the more details are captured.`
+      },
+      uav:{
+        title:"// DEMO — AUTONOMOUS UAV LANDING",
+        alt:"Real autonomous UAV landing demo",
+        stats:["SUCCESS","PRECISION","FPS","STACK"],
+        explain:`<strong style="color:var(--g);">Real demo:</strong> this GIF shows autonomous landing with <strong>ArUco</strong> marker detection, <strong>solvePnP</strong> pose estimation, and corrections sent to <strong>PX4</strong> through <strong>MAVLink</strong>. This is the real field demo, not a recreated animation.`,
+        link:"View GitHub repo"
+      },
+      net:{
+        title:"// U-NET ARCHITECTURE — INTERACTIVE VISUALIZATION",
+        explain:`<strong style="color:var(--g);">Hover over the blocks</strong> to understand their role. The <strong>encoder</strong> compresses the image into abstract representations. The <strong>decoder</strong> reconstructs the segmentation pixel by pixel. <strong>Skip connections</strong> transfer fine details. The <strong>SE</strong> blocks recalibrate the important channels.`,
+        layers:["Input\n256×256","Conv\n128×128","Conv\n64×64","Conv\n32×32","Bridge\n16×16","Up\n32×32","Up\n64×64","Up\n128×128","Output\n256×256"],
+        tooltips:[
+          "Input: 256×256 grayscale image",
+          "Encoder: convolutions + pooling extract features",
+          "Encoder: more abstract representations, lower resolution",
+          "Encoder: highly abstract 32×32 features",
+          "Bottleneck: most compressed representation + SE attention blocks",
+          "Decoder: upsampling + skip connection",
+          "Decoder: progressive segmentation reconstruction",
+          "Decoder: near-final 128×128 segmentation",
+          "Output: segmentation mask — each pixel = crack or not"
+        ],
+        legend:["Encoder","Bottleneck + SE","Decoder","Output"],
+        skip:"skip connection"
+      }
+    }
+  }
+};
+
+function setText(selector,value){
+  const el=document.querySelector(selector);
+  if(el)el.textContent=value;
+}
+
+function setHTML(selector,value){
+  const el=document.querySelector(selector);
+  if(el)el.innerHTML=value;
+}
+
+function setNodeListText(selector,values){
+  document.querySelectorAll(selector).forEach((el,i)=>{
+    if(values[i]!==undefined)el.textContent=values[i];
+  });
+}
+
+function setNodeListHTML(selector,values){
+  document.querySelectorAll(selector).forEach((el,i)=>{
+    if(values[i]!==undefined)el.innerHTML=values[i];
+  });
+}
+
+function setList(selector,items){
+  const el=document.querySelector(selector);
+  if(el)el.innerHTML=items.map(item=>`<li>${item}</li>`).join('');
+}
+
+function applyLanguage(lang){
+  const copy=I18N[lang]||I18N.fr;
+  currentLang=lang;
+  localStorage.setItem(localeStoreKey,lang);
+  document.documentElement.lang=lang;
+  document.title=copy.meta.title;
+  document.querySelector('meta[name="description"]')?.setAttribute('content',copy.meta.description);
+  document.querySelector('meta[property="og:title"]')?.setAttribute('content',copy.meta.title);
+  document.querySelector('meta[property="og:description"]')?.setAttribute('content',copy.meta.description);
+  document.querySelector('meta[property="og:locale"]')?.setAttribute('content',copy.meta.ogLocale);
+  document.querySelector('meta[name="twitter:title"]')?.setAttribute('content',copy.meta.title);
+  document.querySelector('meta[name="twitter:description"]')?.setAttribute('content',copy.meta.twitterDescription);
+
+  setNodeListText('.nav-links a',copy.nav.links);
+  setText('.nav-badge',copy.nav.badge);
+  document.getElementById('lang-toggle')?.setAttribute('aria-label',copy.nav.toggleLabel);
+  document.querySelectorAll('#lang-toggle button').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.lang===lang);
+  });
+
+  setText('.hero-tag',copy.hero.tag);
+  setText('.hero-desc',copy.hero.desc);
+  setNodeListText('.hero-pill',copy.hero.pills);
+  setText('#hero .btn-g',copy.hero.actions[0]);
+  setText('#hero .btn-outline',copy.hero.actions[1]);
+  setNodeListHTML('.hst-l',copy.hero.stats);
+
+  setText('#terminal-section .section-label',copy.terminalIntro.section);
+  setHTML('#terminal-section h2',copy.terminalIntro.heading);
+  setHTML('#terminal-section .terminal-intro p',copy.terminalIntro.body);
+  setText('#terminal-section .hint > span',copy.terminalIntro.commandsLabel);
+  setNodeListText('#terminal-section .quick-link',copy.terminalIntro.quick);
+
+  setText('#experience .sl',copy.experience.section);
+  setHTML('#experience .sh',copy.experience.heading);
+  copy.experience.cards.forEach((card,i)=>{
+    const base=`#experience .tl-item:nth-of-type(${i+1})`;
+    setText(`${base} .tl-year`,card.year);
+    setText(`${base} .tl-role`,card.role);
+    setText(`${base} .tl-badge`,card.badge);
+    setText(`${base} .tl-where`,card.where);
+    setList(`${base} .tl-tasks`,card.tasks);
+    setNodeListText(`${base} .ttag`,card.tags);
+  });
+
+  setText('#projects .sl',copy.projects.section);
+  setHTML('#projects .sh',copy.projects.heading);
+  copy.projects.cards.forEach((card,i)=>{
+    const base=`#projects .pc:nth-of-type(${i+1})`;
+    if(card.num)setText(`${base} .pc-num`,card.num);
+    setText(`${base} .pc-title`,card.title);
+    setText(`${base} .pc-desc`,card.desc);
+    setHTML(`${base} .pc-proof`,card.proof);
+    if(card.links.length)setNodeListText(`${base} .pc-link`,card.links);
+    setText(`${base} .pc-metric`,card.metric);
+    setNodeListText(`${base} .ptag`,card.tags);
+    const cta= document.querySelector(`${base} .pc-cta`) || document.querySelector(`${base} .btn-g`);
+    if(cta){
+      if(cta.querySelector('svg')){
+        const labelNode=[...cta.childNodes].find(node=>node.nodeType===Node.TEXT_NODE);
+        if(labelNode)labelNode.textContent=card.cta;
+        else cta.append(document.createTextNode(card.cta));
+      } else {
+        cta.textContent=card.cta;
+      }
+    }
+  });
+
+  setText('#skills .sl',copy.skills.section);
+  setHTML('#skills .sh',copy.skills.heading);
+  setNodeListText('#skills .sg-title',copy.skills.groups);
+  setNodeListText('#skills .sk-name',copy.skills.names);
+
+  setText('#learn .sl',copy.learn.section);
+  setHTML('#learn .sh',copy.learn.heading);
+  copy.learn.cards.forEach((card,i)=>{
+    const base=`#learn .lc:nth-of-type(${i+1})`;
+    setText(`${base} .lc-title`,card.title);
+    setHTML(`${base} .lc-body`,card.body);
+    setText(`${base} .lc-tag`,card.tag);
+  });
+
+  setText('#contact .sl',copy.contact.section);
+  setHTML('#contact .contact-heading',copy.contact.heading);
+  setText('#contact .contact-sub',copy.contact.sub);
+  setNodeListText('#contact .cc-l',copy.contact.labels);
+
+  setText('footer .fl',copy.footer.copyright);
+  setNodeListText('footer .fr-links a',copy.footer.links);
+
+  setText('#konami h2',copy.konami.title);
+  setHTML('#konami p',copy.konami.body);
+  setText('#konami-close',copy.konami.close);
+
+  resetTerminalView();
+  redrawRadarChart();
+  if(document.getElementById('demo-overlay')?.classList.contains('open')&&currentDemo){
+    if(currentDemo==='uav')launchUAVDemo();
+    if(currentDemo==='net')launchNetDemo();
+  }
+}
+
 // ════════════════════════════════════════
 // HERO NEURAL CANVAS
 // ════════════════════════════════════════
@@ -846,10 +1681,10 @@ if(skillSec)skillObs.observe(skillSec);
   if(!c)return;
   const ctx=c.getContext('2d');
   const W=420,H=420,cx=W/2,cy=H/2,R=160;
-  const labels=['Python','Deep Learning','Vision','Robotique','FEM/CFD','CAO'];
   const vals=[0.93,0.88,0.85,0.80,0.76,0.78];
   let progress=0,raf;
   function drawRadar(p){
+    const labels=I18N[currentLang].skills.radar.labels;
     ctx.clearRect(0,0,W,H);
     const n=labels.length;
     // grid
@@ -914,6 +1749,7 @@ if(skillSec)skillObs.observe(skillSec);
     }
   },{threshold:.3});
   rObs.observe(c);
+  redrawRadarChart=()=>drawRadar(radarDone?1:0);
 })();
 
 // ════════════════════════════════════════
@@ -1031,6 +1867,30 @@ if(skillSec)skillObs.observe(skillSec);
     }},
   };
 
+  function renderWelcome(){
+    const copy=I18N[currentLang].terminal.welcome;
+    body.innerHTML=`
+      <div class="term-line dim">// ${copy.intro}</div>
+      <div class="term-line dim">// ${copy.action} <span style="color:var(--g)">help</span> ${copy.suffix}</div>
+      <div class="term-line dim" style="margin-bottom:.5rem;">// ─────────────────────────────────────</div>
+    `;
+  }
+
+  function getCommands(){
+    const copy=I18N[currentLang].terminal;
+    return {
+      help:{run:()=>copy.help},
+      whoami:{run:()=>copy.whoami},
+      skills:{run:()=>copy.skills},
+      projects:{run:()=>copy.projects},
+      stats:{run:()=>copy.stats},
+      education:{run:()=>copy.education},
+      contact:{run:()=>copy.contact},
+      fun:{run:()=>copy.facts[Math.floor(Math.random()*copy.facts.length)]},
+      clear:{run:()=>{renderWelcome();return[];}},
+    };
+  }
+
   function addLine(type,text){
     const d=document.createElement('div');
     d.className=`term-line ${type}`;
@@ -1051,13 +1911,18 @@ if(skillSec)skillObs.observe(skillSec);
     input.value='';
     if(!cmd)return;
     addLine('cmd','ethan@portfolio:~$ '+cmd);
-    if(CMDS[cmd]){
-      const out=CMDS[cmd].run();
+    const cmds=getCommands();
+    if(cmds[cmd]){
+      const out=cmds[cmd].run();
       if(out&&out.length)typeLines(out);
     } else {
-      addLine('err','command not found: '+cmd+' (try "help")');
+      const copy=I18N[currentLang].terminal;
+      addLine('err',copy.commandNotFound+cmd+copy.helpHint);
     }
   });
+
+  resetTerminalView=renderWelcome;
+  renderWelcome();
 })();
 
 // ════════════════════════════════════════
@@ -1068,8 +1933,12 @@ const demoBody=document.getElementById('demo-body');
 const demoTitle=document.getElementById('demo-title');
 const crackNotebookDemo='crack-detection-demo.ipynb';
 const uavLandingDemoGif='uav-landing-demo.gif';
-document.getElementById('demo-close').onclick=()=>overlay.classList.remove('open');
-overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});
+document.getElementById('demo-close').onclick=()=>{currentDemo=null;overlay.classList.remove('open');};
+overlay.addEventListener('click',e=>{if(e.target===overlay){currentDemo=null;overlay.classList.remove('open');}});
+
+document.querySelectorAll('.pc a').forEach(link=>{
+  link.addEventListener('click',e=>e.stopPropagation());
+});
 
 document.querySelectorAll('.pc[data-demo]').forEach(card=>{
   if(card.dataset.demo==='none')return;
@@ -1079,6 +1948,7 @@ document.querySelectorAll('.pc[data-demo]').forEach(card=>{
       window.open(crackNotebookDemo,'_blank','noopener,noreferrer');
       return;
     }
+    currentDemo=demo;
     overlay.classList.add('open');
     if(demo==='uav')launchUAVDemo();
     else if(demo==='net')launchNetDemo();
@@ -1087,6 +1957,8 @@ document.querySelectorAll('.pc[data-demo]').forEach(card=>{
 
 // ── EDGE DETECTION DEMO ──
 function launchEdgeDemo(){
+  const copy=I18N[currentLang].demos.edge;
+  demoTitle.textContent=copy.title;
   demoTitle.textContent='// DEMO — DÉTECTION DE CONTOURS (STYLE OPENCV)';
   demoBody.innerHTML=`
     <div class="edgedemo">
@@ -1105,6 +1977,13 @@ function launchEdgeDemo(){
         <strong style="color:var(--g);">Comment ça marche ?</strong> La détection de contours Canny (utilisée dans mon pipeline UAV) fonctionne en 3 étapes : (1) flou gaussien pour réduire le bruit, (2) calcul du gradient d'intensité dans toutes les directions, (3) suppression des non-maxima et double seuillage. Les deux sliders contrôlent les seuils — plus ils sont bas, plus de détails sont capturés (et plus de bruit aussi). C'est exactement ce que j'utilise pour détecter les marqueurs ArUco sur les images de drone.
       </div>
     </div>`;
+  demoTitle.textContent=copy.title;
+  demoBody.querySelectorAll('.edge-label')[0].textContent=copy.low;
+  demoBody.querySelectorAll('.edge-label')[2].textContent=copy.high;
+  demoBody.querySelector('.edgedemo > div:first-child > div').textContent=copy.original;
+  demoBody.querySelector('.edgedemo > div:nth-child(2) > div').textContent=copy.result;
+  demoBody.querySelector('#ec-regen').textContent=copy.regen;
+  demoBody.querySelector('.demo-explain').innerHTML=copy.explain;
   const co=document.getElementById('ec-orig');
   const ce=document.getElementById('ec-edge');
   const ctxO=co.getContext('2d');
@@ -1179,6 +2058,8 @@ function launchEdgeDemo(){
 // ── UAV LANDING DEMO ──
 function launchUAVDemo(){
   demoTitle.textContent='// DEMO — ATTERRISSAGE UAV AUTONOME';
+  const copy=I18N[currentLang].demos.uav;
+  demoTitle.textContent=copy.title;
   demoBody.innerHTML=`
     <div class="uavdemo">
       <img src="${uavLandingDemoGif}" alt="Démo réelle d'atterrissage autonome UAV">
@@ -1195,16 +2076,24 @@ function launchUAVDemo(){
         <a href="https://github.com/ethan-bns24/quadrotors_landing_vision" target="_blank" rel="noopener noreferrer" class="quick-link">Voir le repo GitHub</a>
       </div>
     </div>`;
+  demoTitle.textContent=copy.title;
+  demoBody.querySelector('img').alt=copy.alt;
+  demoBody.querySelectorAll('.uav-stat-l').forEach((el,i)=>{el.textContent=copy.stats[i];});
+  demoBody.querySelector('.uavdemo > div[style]').innerHTML=copy.explain;
+  demoBody.querySelector('.quick-link').textContent=copy.link;
 }
 
 // ── UNET ARCHITECTURE DEMO ──
 function launchNetDemo(){
+  const copy=I18N[currentLang].demos.net;
   demoTitle.textContent='// ARCHITECTURE U-NET — VISUALISATION INTERACTIVE';
   demoBody.innerHTML=`
     <canvas id="net-c" width="700" height="320"></canvas>
     <div class="net-explain">
       <strong style="color:var(--g);">Survole les blocs</strong> pour comprendre leur rôle. L'<strong>encodeur</strong> (gauche) compresse progressivement l'image en représentations abstraites. Le <strong>décodeur</strong> (droite) reconstruit la segmentation pixel par pixel. Les <strong>skip connections</strong> (flèches grises) transmettent les détails fins entre les deux. Les blocs <strong>SE (Squeeze-and-Excitation)</strong> que j'ai ajoutés recalibrent les canaux — le réseau "apprend" quels filtres sont importants pour chaque image.
     </div>`;
+  demoTitle.textContent=copy.title;
+  demoBody.querySelector('.net-explain').innerHTML=copy.explain;
   const c=document.getElementById('net-c');
   const ctx=c.getContext('2d');
   const W=700,H=320;
@@ -1224,7 +2113,9 @@ function launchNetDemo(){
     {x:580,y:130,w:40,h:60,label:'Output\n256×256',color:'rgba(194,74,26,.7)',type:'out'},
   ];
 
+  layers.forEach((layer,i)=>{layer.label=copy.layers[i];});
   let hovered=-1;
+  const localizedTooltips=copy.tooltips;
   const tooltips={
     0:'Entrée : image 256×256 pixels (niveaux de gris)',
     1:'Encodeur : convolutions + pooling, extrait les caractéristiques',
@@ -1252,7 +2143,7 @@ function launchNetDemo(){
       // label
       const mx=(la.x+la.w/2+lb.x+lb.w/2)/2;
       ctx.fillStyle='rgba(26,22,18,.3)';ctx.font='7px Space Mono';
-      ctx.textAlign='center';ctx.fillText('skip connection',mx,la.y-40);
+      ctx.textAlign='center';ctx.fillText(copy.skip,mx,la.y-40);
     });
 
     // forward arrows
@@ -1290,7 +2181,7 @@ function launchNetDemo(){
     });
 
     // legend
-    [['rgba(0,184,255,.7)','Encodeur'],['rgba(26,107,74,.8)','Bottleneck + SE'],['rgba(212,168,67,.7)','Décodeur'],['rgba(194,74,26,.7)','Output']].forEach(([col,txt],i)=>{
+    [['rgba(0,184,255,.7)',copy.legend[0]],['rgba(26,107,74,.8)',copy.legend[1]],['rgba(212,168,67,.7)',copy.legend[2]],['rgba(194,74,26,.7)',copy.legend[3]]].forEach(([col,txt],i)=>{
       ctx.fillStyle=col;ctx.fillRect(20+i*155,290,10,10);
       ctx.fillStyle='#6b5f52';ctx.font='9px Space Mono';
       ctx.textAlign='left';ctx.fillText(txt,36+i*155,299);
@@ -1304,7 +2195,7 @@ function launchNetDemo(){
       ctx.beginPath();ctx.roundRect(tx,ty,210,36,3);ctx.fill();ctx.stroke();
       ctx.fillStyle='#3d352c';ctx.font='9px DM Sans';
       ctx.textAlign='left';
-      wrapText(ctx,tooltips[hovered],tx+8,ty+14,195,13);
+      wrapText(ctx,localizedTooltips[hovered],tx+8,ty+14,195,13);
     }
   }
 
@@ -1332,6 +2223,12 @@ function launchNetDemo(){
 }
 
 // ════════════════════════════════════════
+document.querySelectorAll('#lang-toggle button').forEach(btn=>{
+  btn.addEventListener('click',()=>applyLanguage(btn.dataset.lang));
+});
+
+applyLanguage(currentLang);
+
 // KONAMI CODE
 // ════════════════════════════════════════
 (function(){
