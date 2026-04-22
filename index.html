@@ -68,6 +68,8 @@ nav{position:fixed;top:1px;left:0;right:0;z-index:500;display:flex;justify-conte
 
 .hero-content{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:flex-end;}
 .hero-left{}
+.hero-portrait-wrap{margin-bottom:1.5rem;display:flex;align-items:flex-start;}
+.hero-portrait{width:118px;height:118px;object-fit:cover;border-radius:16px;border:1px solid var(--border);background:var(--bg3);padding:4px;box-shadow:0 16px 40px rgba(0,0,0,.05);}
 .hero-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--g);letter-spacing:.2em;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;}
 .hero-tag::before{content:'';width:24px;height:1px;background:var(--g);opacity:.5;}
 .hero-name{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(3.5rem,6vw,7rem);line-height:.9;letter-spacing:-.04em;color:var(--ink);}
@@ -303,6 +305,7 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
   .nav-links,.nav-badge{display:none;}
   .nav-actions{gap:0;}
   .hero-content{grid-template-columns:1fr;}
+  .hero-portrait{width:94px;height:94px;border-radius:14px;}
   .hero-right{display:none;}
   .hero-proof{max-width:none;}
   .terminal-wrap{grid-template-columns:1fr;}
@@ -368,6 +371,9 @@ h2.sh em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:400;
   <canvas id="neural-canvas"></canvas>
   <div class="hero-content">
     <div class="hero-left">
+      <div class="hero-portrait-wrap">
+        <img src="photo-profil.jfif" alt="Photo de profil d'Ethan Binisti" class="hero-portrait">
+      </div>
       <div class="hero-tag">INGÉNIEUR R&D · ESILV 2026</div>
       <h1 class="hero-name">
         Ethan<br>
