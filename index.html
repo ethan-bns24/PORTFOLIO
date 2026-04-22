@@ -878,8 +878,21 @@ if(skillSec)skillObs.observe(skillSec);
   const body=document.getElementById('term-body');
   const input=document.getElementById('term-input');
   if(!input)return;
-  input.focus();
-  document.getElementById('terminal').addEventListener('click',()=>input.focus());
+
+  function focusTerminal(preventScroll=false){
+    if(preventScroll){
+      try{
+        input.focus({preventScroll:true});
+        return;
+      }catch(_){}
+    }
+    input.focus();
+  }
+
+  document.getElementById('terminal').addEventListener('click',()=>focusTerminal());
+  document.querySelectorAll('a[href="#terminal-section"]').forEach(link=>{
+    link.addEventListener('click',()=>focusTerminal(true));
+  });
 
   const CMDS={
     help:{run:()=>[
