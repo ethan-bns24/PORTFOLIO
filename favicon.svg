@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>EB R&D</title>
+  <rect width="64" height="64" rx="12" fill="#faf8f4"/>
+  <rect x="6" y="6" width="52" height="52" rx="10" fill="none" stroke="#d8cfc4"/>
+  <path d="M20 19h24v6H27v7h13v6H27v7h17v6H20z" fill="#1a1612"/>
+  <path d="M45 19h-9v32h9c8.5 0 13-5.6 13-16 0-10.4-4.5-16-13-16Zm-.7 6c4.8 0 7.3 3 7.3 10s-2.5 10-7.3 10H43V25Z" fill="#1a6b4a"/>
+</svg>
