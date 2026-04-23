@@ -57,6 +57,15 @@ let currentDemo=null;
 let resetTerminalView=()=>{};
 let redrawRadarChart=()=>{};
 
+(function syncCanonicalUrl(){
+  try{
+    if(!location.origin||location.origin==='null')return;
+    const url=location.origin+location.pathname;
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href',url);
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content',url);
+  }catch(_){}
+})();
+
 function readAnalytics(){
   try{
     return JSON.parse(localStorage.getItem(analyticsStoreKey)||'{}');
@@ -217,7 +226,7 @@ const I18N={
       heading:"Explorer les <em>démonstrations.</em>",
       cards:[
         {
-          num:"P.001 · CLIQUER POUR LA DÉMO ↗",
+          num:"P.001 · CLIQUER POUR LE NOTEBOOK ↗",
           title:"Détection de Fissures — U-Net",
           desc:"Segmentation sémantique pour inspection structurelle. U-Net + Squeeze-and-Excitation sur ~40 000 images.",
           proof:`<strong>RÔLE</strong> pipeline d'entraînement et d'évaluation complet · <strong>PREUVE</strong> métriques de validation publiées`,
@@ -630,7 +639,7 @@ const I18N={
       heading:"Explore the <em>demos.</em>",
       cards:[
         {
-          num:"P.001 · CLICK FOR DEMO ↗",
+          num:"P.001 · CLICK FOR NOTEBOOK ↗",
           title:"Crack Detection — U-Net",
           desc:"Semantic segmentation for structural inspection. U-Net + Squeeze-and-Excitation on ~40,000 images.",
           proof:`<strong>ROLE</strong> full training and evaluation pipeline · <strong>PROOF</strong> published validation metrics`,
@@ -1299,7 +1308,19 @@ if(reducedMotionQuery.matches){
 (function(){
   const body=document.getElementById('term-body');
   const input=document.getElementById('term-input');
+  const promptSpan=document.querySelector('#terminal .term-ps');
   if(!input)return;
+
+  const smallPromptQuery=window.matchMedia?.('(max-width:540px)');
+  function getPrompt(){
+    const isSmall=smallPromptQuery?.matches;
+    return isSmall ? '$' : 'ethan@portfolio:~$';
+  }
+  function syncPrompt(){
+    if(promptSpan)promptSpan.textContent=getPrompt();
+  }
+  syncPrompt();
+  smallPromptQuery?.addEventListener?.('change',syncPrompt);
 
   function focusTerminal(preventScroll=false){
     if(preventScroll){
@@ -1453,7 +1474,7 @@ if(reducedMotionQuery.matches){
     const cmd=input.value.trim().toLowerCase();
     input.value='';
     if(!cmd)return;
-    addLine('cmd','ethan@portfolio:~$ '+cmd);
+    addLine('cmd',`${getPrompt()} ${cmd}`);
     const cmds=getCommands();
     if(cmds[cmd]){
       const out=cmds[cmd].run();
@@ -1474,13 +1495,60 @@ if(reducedMotionQuery.matches){
 const overlay=document.getElementById('demo-overlay');
 const demoBody=document.getElementById('demo-body');
 const demoTitle=document.getElementById('demo-title');
-const crackNotebookDemo='crack-detection-demo.ipynb';
+const crackNotebookDemo='crack-detection-demo.html';
 const uavLandingDemoGif='uav-landing-demo.gif';
+const uavLandingPoster='media/uav-landing-poster.png';
 let lastFocusedElement=null;
+let removeOverlayTabTrap=()=>{};
+
+function getFocusable(container){
+  const sel=[
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
+  return [...container.querySelectorAll(sel)].filter(el=>{
+    if(el.hidden)return false;
+    if(el.getAttribute('aria-hidden')==='true')return false;
+    return typeof el.focus==='function' && el.offsetParent!==null;
+  });
+}
+
+function installTabTrap(container){
+  function onKeyDown(e){
+    if(e.key!=='Tab')return;
+    const f=getFocusable(container);
+    if(!f.length){
+      e.preventDefault();
+      return;
+    }
+    const first=f[0];
+    const last=f[f.length-1];
+    const active=document.activeElement;
+    if(e.shiftKey){
+      if(active===first||!container.contains(active)){
+        e.preventDefault();
+        last.focus();
+      }
+    }else{
+      if(active===last){
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+  container.addEventListener('keydown',onKeyDown);
+  return ()=>container.removeEventListener('keydown',onKeyDown);
+}
+
 function closeDemoOverlay(){
   currentDemo=null;
   overlay.classList.remove('open');
   demoBody.innerHTML='';
+  removeOverlayTabTrap();
   if(lastFocusedElement&&typeof lastFocusedElement.focus==='function')lastFocusedElement.focus();
 }
 function openDemoOverlay(demo,trigger){
@@ -1488,6 +1556,8 @@ function openDemoOverlay(demo,trigger){
   lastFocusedElement=trigger||document.activeElement;
   trackEvent(`demo-${demo}-open`);
   overlay.classList.add('open');
+  removeOverlayTabTrap();
+  removeOverlayTabTrap=installTabTrap(overlay);
   if(demo==='edge')launchEdgeDemo();
   else if(demo==='uav')launchUAVDemo();
   else if(demo==='net')launchNetDemo();
@@ -1616,9 +1686,17 @@ function launchEdgeDemo(){
 function launchUAVDemo(){
   const copy=I18N[currentLang].demos.uav;
   demoTitle.textContent=copy.title;
+  const useLitePreview=!!(navigator.connection&&navigator.connection.saveData)||reducedMotionQuery.matches;
+  const mediaHTML=useLitePreview
+    ? `
+      <button type="button" class="uav-load" id="uav-load" aria-label="${copy.load}">
+        <img src="${uavLandingPoster}" alt="${copy.alt}" loading="lazy" decoding="async" width="854" height="480">
+        <div class="uav-load-badge">${copy.load}</div>
+      </button>`
+    : `<img src="${uavLandingDemoGif}" alt="${copy.alt}" loading="lazy" decoding="async" width="854" height="480">`;
   demoBody.innerHTML=`
     <div class="uavdemo">
-      <img src="${uavLandingDemoGif}" alt="${copy.alt}" loading="lazy" decoding="async" width="854" height="480">
+      ${mediaHTML}
       <div class="uav-info">
         <div class="uav-stat"><div class="uav-stat-n">95%</div><div class="uav-stat-l">RÉUSSITE</div></div>
         <div class="uav-stat"><div class="uav-stat-n">cm</div><div class="uav-stat-l">PRÉCISION</div></div>
@@ -1634,6 +1712,13 @@ function launchUAVDemo(){
     </div>`;
   demoBody.querySelectorAll('.uav-stat-l').forEach((el,i)=>{el.textContent=copy.stats[i];});
   demoBody.querySelector('.quick-link').textContent=copy.link;
+  if(useLitePreview){
+    const btn=demoBody.querySelector('#uav-load');
+    btn?.addEventListener('click',()=>{
+      trackEvent('uav-gif-load');
+      btn.outerHTML=`<img src="${uavLandingDemoGif}" alt="${copy.alt}" loading="lazy" decoding="async" width="854" height="480">`;
+    });
+  }
 }
 
 // ── UNET ARCHITECTURE DEMO ──
@@ -1804,9 +1889,12 @@ applyLanguage(currentLang);
   function launchMech(){
     const k=document.getElementById('konami');
     k.classList.add('on');
+    const previouslyFocused=document.activeElement;
+    let removeKonamiTabTrap=()=>{};
     const canvas=document.getElementById('mech-canvas');
     const ctrl=document.getElementById('mech-ctrl');
     if(!canvas||!ctrl)return;
+    removeKonamiTabTrap=installTabTrap(k);
     const ctx=canvas.getContext('2d');
 
     const state={
@@ -2060,12 +2148,14 @@ applyLanguage(currentLang);
 
     function closeMech(){
       k.classList.remove('on');
+      removeKonamiTabTrap();
       document.removeEventListener('keydown',handleEscape);
       window.removeEventListener('resize',handleResize);
       canvas.removeEventListener('pointerdown',onPointerDown);
       canvas.removeEventListener('pointermove',onPointerMove);
       canvas.removeEventListener('pointerup',onPointerUp);
       canvas.removeEventListener('pointercancel',onPointerUp);
+      if(previouslyFocused&&typeof previouslyFocused.focus==='function')previouslyFocused.focus();
     }
 
     function handleEscape(e){
@@ -2081,6 +2171,7 @@ applyLanguage(currentLang);
     resizeCanvas();
     bindControls();
     draw();
+    document.getElementById('konami-close')?.focus();
     canvas.addEventListener('pointerdown',onPointerDown);
     canvas.addEventListener('pointermove',onPointerMove);
     canvas.addEventListener('pointerup',onPointerUp);

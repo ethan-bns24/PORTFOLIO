@@ -42,7 +42,8 @@ Puis ouvrir `http://localhost:8080`.
 
 ## Notes produit
 
-- La démo UAV charge d'abord un poster, puis le GIF lourd uniquement à la demande.
+ - La démo UAV charge le GIF lourd uniquement à l'ouverture de la démo (pas au chargement initial de la page).
+- Le notebook fissures est aussi fourni en HTML pour être lisible dans un navigateur : `crack-detection-demo.html` (généré à partir de `crack-detection-demo.ipynb`).
 - Un suivi analytics local très léger est stocké dans `localStorage` pour compter les CTA et l'ouverture des démos.
 - Le portfolio est bilingue FR / EN.
 
