@@ -109,19 +109,19 @@ const I18N={
   fr:{
     meta:{
       title:"Ethan Binisti — Ingénieur R&D",
-      description:"Portfolio d'Ethan Binisti, ingénieur R&D orienté computer vision, simulation numérique et systèmes embarqués.",
+      description:"Portfolio d'Ethan Binisti, ingénieur en modélisation et mécanique numérique, passionné par le code, les systèmes embarqués et le machine learning.",
       ogLocale:"fr_FR",
-      twitterDescription:"Portfolio orienté vision, simulation et embarqué."
+      twitterDescription:"Portfolio orienté modélisation, mécanique numérique, embarqué et machine learning."
     },
     nav:{
       links:["Profil","Expérience","Projets","Compétences","Notes"],
-      badge:"DISPONIBLE CDI",
+      badge:"CDI DÈS SEPT. 2026",
       toggleLabel:"Choisir la langue"
     },
     hero:{
-      tag:"INGÉNIEUR R&D · ESILV 2026",
-      desc:"Ingénieur R&D orienté computer vision, simulation numérique et systèmes embarqués. Je construis des prototypes techniques solides, mesurables, et vite exploitables en entreprise.",
-      pills:["CDI IMMÉDIAT","VISION · SIMULATION · EMBARQUÉ","PROJETS MESURÉS ET DOCUMENTÉS"],
+      tag:"INGÉNIEUR MODÉLISATION & MÉCANIQUE NUMÉRIQUE · ESILV 2026",
+      desc:"Ingénieur en modélisation et mécanique numérique, passionné par le code, les systèmes embarqués et le machine learning. Je construis des prototypes techniques solides, mesurables, et vite exploitables en entreprise.",
+      pills:["CDI DÈS SEPT. 2026","VISION · SIMULATION · EMBARQUÉ","PROJETS MESURÉS ET DOCUMENTÉS"],
       actions:["Voir les projets clés →","📄 Télécharger mon CV"],
       stats:[
         "ACCURACY<br>U-NET CRACK DETECTION",
@@ -353,15 +353,15 @@ const I18N={
         },
         {
           key:"DISPONIBILITÉ",
-          title:"CDI immédiat, échanges ouverts rapidement",
-          body:"Disponible maintenant pour discuter d’un poste, d’un scope R&D ou d’une rencontre technique courte."
+          title:"CDI dès septembre 2026, échanges ouverts rapidement",
+          body:"Disponible dès maintenant pour échanger (entretiens), prise de poste à partir de septembre 2026."
         }
       ]
     },
     contact:{
       section:"CONTACT",
       heading:"Travaillons<br><em>ensemble.</em>",
-      sub:"Je recherche un CDI où les problèmes difficiles sont la norme. Disponible pour un entretien à tout moment.",
+      sub:"Je recherche un CDI où les problèmes difficiles sont la norme. Disponible à partir de septembre 2026 (entretiens possibles dès maintenant).",
       labels:["EMAIL","TÉL","LINKEDIN","GITHUB"]
     },
     footer:{
@@ -394,7 +394,7 @@ const I18N={
       ],
       whoami:[
         {t:"success",s:"> Ethan Binisti, 23 ans"},
-        {t:"out",s:"  Ingénieur mécanique (ESILV, Master 2026)"},
+        {t:"out",s:"  Ingénieur modélisation & mécanique numérique (ESILV, Master 2026)"},
         {t:"out",s:"  Spécialisé en simulation numérique, embarqué, deep learning"},
         {t:"out",s:"  Autodidacte passionné — robotique & IA apprises en dehors de l'école"},
         {t:"out",s:"  Professeur particulier en maths/physique depuis 3 ans"},
@@ -450,7 +450,7 @@ const I18N={
         {t:"out",s:"  tel      07 67 46 45 65"},
         {t:"out",s:"  linkedin linkedin.com/in/ethan-binisti"},
         {t:"out",s:"  github   github.com/ethan-bns24"},
-        {t:"dim",s:"  → Disponible pour un CDI immédiatement"}
+        {t:"dim",s:"  → Disponible pour un CDI dès septembre 2026 (entretiens possibles dès maintenant)"}
       ],
       analytics:{
         title:"ANALYTICS LOCALES ─────────────────",
@@ -522,19 +522,19 @@ const I18N={
   en:{
     meta:{
       title:"Ethan Binisti — R&D Engineer",
-      description:"Portfolio of Ethan Binisti, an R&D engineer focused on computer vision, numerical simulation, and embedded systems.",
+      description:"Portfolio of Ethan Binisti, a numerical modeling and mechanics engineer passionate about code, embedded systems, and machine learning.",
       ogLocale:"en_US",
-      twitterDescription:"Portfolio focused on vision, simulation, and embedded systems."
+      twitterDescription:"Portfolio focused on numerical modeling, mechanics, embedded systems, and machine learning."
     },
     nav:{
       links:["Profile","Experience","Projects","Skills","Notes"],
-      badge:"OPEN TO FULL-TIME",
+      badge:"FULL-TIME SEP 2026",
       toggleLabel:"Choose language"
     },
     hero:{
-      tag:"R&D ENGINEER · ESILV 2026",
-      desc:"R&D engineer focused on computer vision, numerical simulation, and embedded systems. I build strong technical prototypes that are measurable and quickly usable in industry.",
-      pills:["AVAILABLE NOW","VISION · SIMULATION · EMBEDDED","MEASURED AND DOCUMENTED PROJECTS"],
+      tag:"NUMERICAL MODELING & MECHANICS · ESILV 2026",
+      desc:"Numerical modeling and mechanics engineer, passionate about code, embedded systems, and machine learning. I build strong technical prototypes that are measurable and quickly usable in industry.",
+      pills:["FULL-TIME FROM SEP 2026","VISION · SIMULATION · EMBEDDED","MEASURED AND DOCUMENTED PROJECTS"],
       actions:["View featured work →","📄 Download resume"],
       stats:[
         "ACCURACY<br>U-NET CRACK DETECTION",
@@ -766,15 +766,15 @@ const I18N={
         },
         {
           key:"AVAILABILITY",
-          title:"Available now for full-time opportunities",
-          body:"Open now to discuss a role, an R&D scope, or a short technical conversation."
+          title:"Full-time starting September 2026",
+          body:"Open to talk now (interviews), start date from September 2026."
         }
       ]
     },
     contact:{
       section:"CONTACT",
       heading:"Let's build<br><em>together.</em>",
-      sub:"I am looking for a full-time role where hard problems are the norm. Available for an interview at any time.",
+      sub:"I am looking for a full-time role where hard problems are the norm. Available starting September 2026 (interviews possible now).",
       labels:["EMAIL","PHONE","LINKEDIN","GITHUB"]
     },
     footer:{
@@ -807,7 +807,7 @@ const I18N={
       ],
       whoami:[
         {t:"success",s:"> Ethan Binisti, 23 years old"},
-        {t:"out",s:"  Mechanical engineering student (ESILV, MSc 2026)"},
+        {t:"out",s:"  Numerical modeling & mechanics engineer (ESILV, MSc 2026)"},
         {t:"out",s:"  Focused on numerical simulation, embedded systems, and deep learning"},
         {t:"out",s:"  Self-taught in robotics & AI outside school"},
         {t:"out",s:"  Private tutor in math and physics for 3 years"},
@@ -863,7 +863,7 @@ const I18N={
         {t:"out",s:"  phone    07 67 46 45 65"},
         {t:"out",s:"  linkedin linkedin.com/in/ethan-binisti"},
         {t:"out",s:"  github   github.com/ethan-bns24"},
-        {t:"dim",s:"  → Available for a full-time role now"}
+        {t:"dim",s:"  → Available for a full-time role from Sep 2026 (interviews possible now)"}
       ],
       analytics:{
         title:"LOCAL ANALYTICS ──────────────────",
@@ -1372,7 +1372,7 @@ if(reducedMotionQuery.matches){
     ]},
     whoami:{run:()=>[
       {t:'success',s:'> Ethan Binisti, 23 ans'},
-      {t:'out',s:'  Ingénieur mécanique (ESILV, Master 2026)'},
+      {t:'out',s:'  Ingénieur modélisation & mécanique numérique (ESILV, Master 2026)'},
       {t:'out',s:'  Spécialisé en simulation numérique, embarqué, deep learning'},
       {t:'out',s:'  Autodidacte passionné — robotique & IA apprises en dehors de l\'école'},
       {t:'out',s:'  Professeur particulier en maths/physique depuis 3 ans'},
@@ -1428,7 +1428,7 @@ if(reducedMotionQuery.matches){
       {t:'out',s:'  tel      07 67 46 45 65'},
       {t:'out',s:'  linkedin linkedin.com/in/ethan-binisti'},
       {t:'out',s:'  github   github.com/ethan-bns24'},
-      {t:'dim',s:'  → Disponible pour un CDI immédiatement'},
+      {t:'dim',s:'  → Disponible pour un CDI dès septembre 2026 (entretiens possibles dès maintenant)'},
     ]},
     fun:{run:()=>{
       const facts=[
