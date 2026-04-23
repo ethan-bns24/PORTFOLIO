@@ -56,6 +56,15 @@ let currentLang=localStorage.getItem(localeStoreKey)==='en'?'en':'fr';
 let currentDemo=null;
 let resetTerminalView=()=>{};
 let redrawRadarChart=()=>{};
+const navEl=document.querySelector('nav');
+
+function syncNavHeight(){
+  if(!navEl)return;
+  requestAnimationFrame(()=>{
+    const h=Math.ceil(navEl.getBoundingClientRect().height);
+    if(h>0)document.documentElement.style.setProperty('--navH',h+'px');
+  });
+}
 
 (function syncCanonicalUrl(){
   try{
@@ -65,6 +74,11 @@ let redrawRadarChart=()=>{};
     document.querySelector('meta[property="og:url"]')?.setAttribute('content',url);
   }catch(_){}
 })();
+
+syncNavHeight();
+window.addEventListener('resize',syncNavHeight,{passive:true});
+window.addEventListener('orientationchange',syncNavHeight,{passive:true});
+document.fonts?.ready?.then?.(syncNavHeight).catch?.(()=>{});
 
 function readAnalytics(){
   try{
@@ -1100,6 +1114,7 @@ function applyLanguage(lang){
 
   resetTerminalView();
   redrawRadarChart();
+  syncNavHeight();
   if(document.getElementById('demo-overlay')?.classList.contains('open')&&currentDemo){
     if(currentDemo==='uav')launchUAVDemo();
     if(currentDemo==='net')launchNetDemo();
