@@ -402,17 +402,17 @@ const I18N={
       ],
       skills:[
         {t:"hi",s:"── Programmation ──────────────────"},
-        {t:"out",s:"  Python         ████████████░░  93%"},
-        {t:"out",s:"  SQL (T-SQL)    ██████████░░░░  82%"},
-        {t:"out",s:"  C / C++        █████████░░░░░  70%"},
+        {t:"out",s:"  Python         ████████████░░  Expert"},
+        {t:"out",s:"  SQL (T-SQL)    ██████████░░░░  Avancé"},
+        {t:"out",s:"  C / C++        █████████░░░░░  Intermédiaire"},
         {t:"hi",s:"── Deep Learning ─────────────────"},
-        {t:"out",s:"  PyTorch        ███████████░░░  88%"},
-        {t:"out",s:"  OpenCV         ██████████░░░░  84%"},
-        {t:"out",s:"  U-Net / SE     ██████████░░░░  83%"},
+        {t:"out",s:"  PyTorch        ███████████░░░  Avancé"},
+        {t:"out",s:"  OpenCV         ██████████░░░░  Avancé"},
+        {t:"out",s:"  U-Net / SE     ██████████░░░░  Avancé"},
         {t:"hi",s:"── Robotique / Simulation ───────"},
-        {t:"out",s:"  ROS / PX4      ██████████░░░░  80%"},
-        {t:"out",s:"  Abaqus / FEM   ██████████░░░░  80%"},
-        {t:"out",s:"  ANSYS Fluent   █████████░░░░░  72%"}
+        {t:"out",s:"  ROS / PX4      ██████████░░░░  Avancé"},
+        {t:"out",s:"  Abaqus / FEM   ██████████░░░░  Avancé"},
+        {t:"out",s:"  ANSYS Fluent   █████████░░░░░  Intermédiaire"}
       ],
       projects:[
         {t:"hi",s:"[1] Détection de fissures — U-Net (PyTorch)"},
@@ -815,17 +815,17 @@ const I18N={
       ],
       skills:[
         {t:"hi",s:"── Programming ─────────────────────"},
-        {t:"out",s:"  Python         ████████████░░  93%"},
-        {t:"out",s:"  SQL (T-SQL)    ██████████░░░░  82%"},
-        {t:"out",s:"  C / C++        █████████░░░░░  70%"},
+        {t:"out",s:"  Python         ████████████░░  Expert"},
+        {t:"out",s:"  SQL (T-SQL)    ██████████░░░░  Advanced"},
+        {t:"out",s:"  C / C++        █████████░░░░░  Intermediate"},
         {t:"hi",s:"── Deep Learning ─────────────────"},
-        {t:"out",s:"  PyTorch        ███████████░░░  88%"},
-        {t:"out",s:"  OpenCV         ██████████░░░░  84%"},
-        {t:"out",s:"  U-Net / SE     ██████████░░░░  83%"},
+        {t:"out",s:"  PyTorch        ███████████░░░  Advanced"},
+        {t:"out",s:"  OpenCV         ██████████░░░░  Advanced"},
+        {t:"out",s:"  U-Net / SE     ██████████░░░░  Advanced"},
         {t:"hi",s:"── Robotics / Simulation ─────────"},
-        {t:"out",s:"  ROS / PX4      ██████████░░░░  80%"},
-        {t:"out",s:"  Abaqus / FEM   ██████████░░░░  80%"},
-        {t:"out",s:"  ANSYS Fluent   █████████░░░░░  72%"}
+        {t:"out",s:"  ROS / PX4      ██████████░░░░  Advanced"},
+        {t:"out",s:"  Abaqus / FEM   ██████████░░░░  Advanced"},
+        {t:"out",s:"  ANSYS Fluent   █████████░░░░░  Intermediate"}
       ],
       projects:[
         {t:"hi",s:"[1] Crack detection — U-Net (PyTorch)"},
@@ -961,6 +961,20 @@ function setList(selector,items){
   if(el)el.innerHTML=items.map(item=>`<li>${item}</li>`).join('');
 }
 
+function getSkillLevelLabel(p,lang){
+  if(!Number.isFinite(p))return '';
+  if(lang==='fr'){
+    if(p>=90)return 'Expert';
+    if(p>=75)return 'Avancé';
+    if(p>=60)return 'Intermédiaire';
+    return 'Notions';
+  }
+  if(p>=90)return 'Expert';
+  if(p>=75)return 'Advanced';
+  if(p>=60)return 'Intermediate';
+  return 'Familiar';
+}
+
 function applyLanguage(lang){
   const copy=I18N[lang]||I18N.fr;
   currentLang=lang;
@@ -1047,6 +1061,11 @@ function applyLanguage(lang){
   setHTML('#skills .sh',copy.skills.heading);
   setNodeListText('#skills .sg-title',copy.skills.groups);
   setNodeListText('#skills .sk-name',copy.skills.names);
+  document.querySelectorAll('#skills .sk-item').forEach(item=>{
+    const p=+(item.querySelector('.sk-fill')?.dataset.p||'');
+    const val=item.querySelector('.sk-val');
+    if(val)val.textContent=getSkillLevelLabel(p,lang);
+  });
 
   setText('#learn .sl',copy.learn.section);
   setHTML('#learn .sh',copy.learn.heading);
@@ -1361,17 +1380,17 @@ if(reducedMotionQuery.matches){
     ]},
     skills:{run:()=>[
       {t:'hi',s:'── Programmation ──────────────────'},
-      {t:'out',s:'  Python         ████████████░░  93%'},
-      {t:'out',s:'  SQL (T-SQL)    ██████████░░░░  82%'},
-      {t:'out',s:'  C / C++        █████████░░░░░  70%'},
+      {t:'out',s:'  Python         ████████████░░  Expert'},
+      {t:'out',s:'  SQL (T-SQL)    ██████████░░░░  Avancé'},
+      {t:'out',s:'  C / C++        █████████░░░░░  Intermédiaire'},
       {t:'hi',s:'── Deep Learning ──────────────────'},
-      {t:'out',s:'  PyTorch        ███████████░░░  88%'},
-      {t:'out',s:'  OpenCV         ██████████░░░░  84%'},
-      {t:'out',s:'  U-Net / SE     ██████████░░░░  83%'},
+      {t:'out',s:'  PyTorch        ███████████░░░  Avancé'},
+      {t:'out',s:'  OpenCV         ██████████░░░░  Avancé'},
+      {t:'out',s:'  U-Net / SE     ██████████░░░░  Avancé'},
       {t:'hi',s:'── Robotique / Simulation ─────────'},
-      {t:'out',s:'  ROS / PX4      ██████████░░░░  80%'},
-      {t:'out',s:'  Abaqus / FEM   ██████████░░░░  80%'},
-      {t:'out',s:'  ANSYS Fluent   █████████░░░░░  72%'},
+      {t:'out',s:'  ROS / PX4      ██████████░░░░  Avancé'},
+      {t:'out',s:'  Abaqus / FEM   ██████████░░░░  Avancé'},
+      {t:'out',s:'  ANSYS Fluent   █████████░░░░░  Intermédiaire'},
     ]},
     projects:{run:()=>[
       {t:'hi',s:'[1] Détection de fissures — U-Net (PyTorch)'},
