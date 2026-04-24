@@ -384,7 +384,7 @@ const I18N={
     },
     konami:{
       title:"// MINI SIMU MÉCANIQUE UNLOCKED",
-      body:`Tu as trouvé le Konami Code (↑↑↓↓←→←→BA).<br>Mini démo de mécanique: flexion d'une poutre en console sous charge ponctuelle. Change la force et la position pour voir la flèche et le diagramme de moment.`,
+      body:`Tu as trouvé le Konami Code (↑↑↓↓←→←→BA).<br>Mini simu de RDM: choisis l'<strong>appui</strong> (console ou appuis simples) et le <strong>chargement</strong> (ponctuel / réparti / couple). Observe la flèche <strong>w(x)</strong> et les diagrammes <strong>V(x)</strong> et <strong>M(x)</strong>.<br><span style="color:var(--ink4)">Astuce: dM/dx = V et w'' = M/(E·I).</span>`,
       close:"[ FERMER ]"
     },
     terminal:{
@@ -797,7 +797,7 @@ const I18N={
     },
     konami:{
       title:"// MINI MECHANICS SIM UNLOCKED",
-      body:`You found the Konami Code (↑↑↓↓←→←→BA).<br>Mini mechanics demo: cantilever beam bending under a point load. Change the force and its position to see deflection and the bending moment diagram.`,
+      body:`You found the Konami Code (↑↑↓↓←→←→BA).<br>Mini beam mechanics sim: pick the <strong>support</strong> (cantilever or simply supported) and the <strong>load</strong> (point / distributed / moment). Observe <strong>w(x)</strong> and the <strong>V(x)</strong> and <strong>M(x)</strong> diagrams.<br><span style="color:var(--ink4)">Tip: dM/dx = V and w'' = M/(E·I).</span>`,
       close:"[ CLOSE ]"
     },
     terminal:{
@@ -1933,61 +1933,484 @@ applyLanguage(currentLang);
 
     const state={
       L:1.0,
-      a:0.7,
-      F:350,
-      EI:160,
+      support:'cantilever', // 'cantilever' | 'simple'
+      load:'point',         // 'point' | 'udl' | 'moment'
+      diagram:'M',          // 'M' | 'V'
+      a:0.7,                // load position (0..1)
+      F:350,                // N
+      q:420,                // N/m (UDL)
+      M0:220,               // N·m (end moment)
+      EI:160,               // arbitrary scale
+      probe:0.55,           // x probe (0..1)
       drag:false
     };
 
     function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
-
-    function setCtrlHTML(){
-      const labels=currentLang==='fr'
-        ? {pos:'POSITION:',force:'FORCE:',stiff:'RIGIDITÉ EI:',reset:'RESET',random:'RANDOM'}
-        : {pos:'POSITION:',force:'FORCE:',stiff:'STIFFNESS EI:',reset:'RESET',random:'RANDOM'};
-      ctrl.innerHTML=`
-        <span class="edge-label">${labels.pos}</span>
-        <input class="edge-slider" type="range" id="mech-a" min="20" max="100" value="${Math.round(state.a*100)}">
-        <span class="edge-label" id="mech-a-v">${Math.round(state.a*100)}%</span>
-
-        <span class="edge-label">${labels.force}</span>
-        <input class="edge-slider" type="range" id="mech-f" min="50" max="800" value="${state.F}">
-        <span class="edge-label" id="mech-f-v">${state.F}N</span>
-
-        <span class="edge-label">${labels.stiff}</span>
-        <input class="edge-slider" type="range" id="mech-ei" min="60" max="420" value="${state.EI}">
-        <span class="edge-label" id="mech-ei-v">${state.EI}</span>
-
-        <button type="button" id="mech-reset">${labels.reset}</button>
-        <button type="button" id="mech-rand">${labels.random}</button>
-      `;
-    }
-
-    function beamDeflection(x,a,F,EI,L){
-      // Cantilever beam, point load at x=a from the fixed end.
-      // w'' = M/EI, with M(x)=F*(a-x) for x<=a else 0.
-      if(x<=a){
-        return (F/EI)*(a*x*x/2 - x*x*x/6);
-      }
-      return (F/EI)*(a*a*x/2 - a*a*a/6);
-    }
-
-    function beamMoment(x,a,F){
-      return x<=a ? F*(a-x) : 0;
-    }
-
     function rgba(r,g,b,a){return `rgba(${r},${g},${b},${a})`;}
+
+    function getLabels(){
+      if(currentLang==='fr'){
+        return {
+          support:'APPUI:',
+          cantilever:'Console',
+          simple:'Appuis simples',
+          load:'CHARGE:',
+          point:'Ponctuelle',
+          udl:'Répartie',
+          moment:'Couple',
+          pos:'POSITION:',
+          force:'FORCE:',
+          udlQ:'CHARGE q:',
+          mom:'COUPLE M:',
+          stiff:'RIGIDITÉ E·I:',
+          diagram:'DIAGRAMME:',
+          reset:'RESET',
+          random:'RANDOM',
+          tip:'Flèche max',
+          reactions:'Réactions',
+          probe:'Sonde',
+          hint:'dM/dx = V  ·  w\'\' = M/(E·I)  ·  (touche: drag la charge ponctuelle)'
+        };
+      }
+      return {
+        support:'SUPPORT:',
+        cantilever:'Cantilever',
+        simple:'Simply supported',
+        load:'LOAD:',
+        point:'Point',
+        udl:'Distributed',
+        moment:'Moment',
+        pos:'POSITION:',
+        force:'FORCE:',
+        udlQ:'LOAD q:',
+        mom:'MOMENT M:',
+        stiff:'STIFFNESS E·I:',
+        diagram:'DIAGRAM:',
+        reset:'RESET',
+        random:'RANDOM',
+        tip:'Max deflection',
+        reactions:'Reactions',
+        probe:'Probe',
+        hint:'dM/dx = V  ·  w\'\' = M/(E·I)  ·  (touch: drag the point load)'
+      };
+    }
+
+    function normalizeModes(){
+      if(state.support!=='cantilever'&&state.load==='moment'){
+        state.load='point';
+      }
+      state.support=state.support==='simple'?'simple':'cantilever';
+      state.load=state.load==='udl'?'udl':(state.load==='moment'?'moment':'point');
+      state.diagram=state.diagram==='V'?'V':'M';
+    }
+
+    function getPosClamp(){
+      // Avoid degenerate conditions at the supports.
+      return state.support==='cantilever' ? {min:0.2,max:1.0} : {min:0.05,max:0.95};
+    }
+
+    function syncControlValues(){
+      // Keep HTML + state in sync after a re-render.
+      const slA=ctrl.querySelector('#mech-a');
+      const vA=ctrl.querySelector('#mech-a-v');
+      if(slA){
+        const {min,max}=getPosClamp();
+        slA.min=String(Math.round(min*100));
+        slA.max=String(Math.round(max*100));
+        slA.value=String(Math.round(state.a*100));
+        if(vA)vA.textContent=Math.round(state.a*100)+'%';
+      }
+      const slF=ctrl.querySelector('#mech-f');
+      const vF=ctrl.querySelector('#mech-f-v');
+      if(slF){
+        slF.value=String(state.F);
+        if(vF)vF.textContent=state.F+'N';
+      }
+      const slQ=ctrl.querySelector('#mech-q');
+      const vQ=ctrl.querySelector('#mech-q-v');
+      if(slQ){
+        slQ.value=String(state.q);
+        if(vQ)vQ.textContent=state.q+'N/m';
+      }
+      const slM=ctrl.querySelector('#mech-m');
+      const vM=ctrl.querySelector('#mech-m-v');
+      if(slM){
+        slM.value=String(state.M0);
+        if(vM)vM.textContent=state.M0+'N·m';
+      }
+      const slEI=ctrl.querySelector('#mech-ei');
+      const vEI=ctrl.querySelector('#mech-ei-v');
+      if(slEI){
+        slEI.value=String(state.EI);
+        if(vEI)vEI.textContent=String(state.EI);
+      }
+    }
+
+    function renderControls(){
+      normalizeModes();
+      const t=getLabels();
+      const isPoint=state.load==='point';
+      const isUdl=state.load==='udl';
+      const isMom=state.load==='moment';
+      const momentDisabled=state.support!=='cantilever';
+
+      ctrl.innerHTML=`
+        <div class="mech-row">
+          <span class="edge-label">${t.support}</span>
+          <button type="button" data-support="cantilever" class="${state.support==='cantilever'?'active':''}">${t.cantilever}</button>
+          <button type="button" data-support="simple" class="${state.support==='simple'?'active':''}">${t.simple}</button>
+          <span class="edge-label" style="margin-left:.25rem;">${t.load}</span>
+          <button type="button" data-load="point" class="${isPoint?'active':''}">${t.point}</button>
+          <button type="button" data-load="udl" class="${isUdl?'active':''}">${t.udl}</button>
+          <button type="button" data-load="moment" class="${isMom?'active':''}" ${momentDisabled?'disabled':''}>${t.moment}</button>
+        </div>
+
+        <div class="mech-row">
+          ${isPoint?`
+            <span class="edge-label">${t.pos}</span>
+            <input class="edge-slider" type="range" id="mech-a" min="20" max="100" value="${Math.round(state.a*100)}">
+            <span class="edge-label" id="mech-a-v">${Math.round(state.a*100)}%</span>
+
+            <span class="edge-label">${t.force}</span>
+            <input class="edge-slider" type="range" id="mech-f" min="50" max="900" value="${state.F}">
+            <span class="edge-label" id="mech-f-v">${state.F}N</span>
+          `:''}
+
+          ${isUdl?`
+            <span class="edge-label">${t.udlQ}</span>
+            <input class="edge-slider" type="range" id="mech-q" min="40" max="900" value="${state.q}">
+            <span class="edge-label" id="mech-q-v">${state.q}N/m</span>
+          `:''}
+
+          ${isMom?`
+            <span class="edge-label">${t.mom}</span>
+            <input class="edge-slider" type="range" id="mech-m" min="40" max="700" value="${state.M0}">
+            <span class="edge-label" id="mech-m-v">${state.M0}N·m</span>
+          `:''}
+
+          <span class="edge-label">${t.stiff}</span>
+          <input class="edge-slider" type="range" id="mech-ei" min="60" max="420" value="${state.EI}">
+          <span class="edge-label" id="mech-ei-v">${state.EI}</span>
+        </div>
+
+        <div class="mech-row">
+          <span class="edge-label">${t.diagram}</span>
+          <button type="button" data-diag="V" class="${state.diagram==='V'?'active':''}">V(x)</button>
+          <button type="button" data-diag="M" class="${state.diagram==='M'?'active':''}">M(x)</button>
+          <button type="button" id="mech-reset">${t.reset}</button>
+          <button type="button" id="mech-rand">${t.random}</button>
+        </div>
+        <div class="mech-row mech-hint"><span class="edge-label" style="white-space:normal;max-width:860px;line-height:1.5;text-align:center;">${t.hint}</span></div>
+      `;
+
+      syncControlValues();
+
+      // mode buttons
+      ctrl.querySelectorAll('button[data-support]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          state.support=btn.dataset.support;
+          renderControls();
+          draw();
+        });
+      });
+      ctrl.querySelectorAll('button[data-load]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const next=btn.dataset.load;
+          if(next==='moment'&&state.support!=='cantilever')return;
+          state.load=next;
+          renderControls();
+          draw();
+        });
+      });
+      ctrl.querySelectorAll('button[data-diag]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          state.diagram=btn.dataset.diag;
+          renderControls();
+          draw();
+        });
+      });
+
+      // sliders
+      const slA=ctrl.querySelector('#mech-a');
+      const slF=ctrl.querySelector('#mech-f');
+      const slQ=ctrl.querySelector('#mech-q');
+      const slM=ctrl.querySelector('#mech-m');
+      const slEI=ctrl.querySelector('#mech-ei');
+      const update=()=>{
+        if(slA)state.a=+slA.value/100;
+        if(slF)state.F=+slF.value;
+        if(slQ)state.q=+slQ.value;
+        if(slM)state.M0=+slM.value;
+        if(slEI)state.EI=+slEI.value;
+        syncControlValues();
+        draw();
+      };
+      slA?.addEventListener('input',update);
+      slF?.addEventListener('input',update);
+      slQ?.addEventListener('input',update);
+      slM?.addEventListener('input',update);
+      slEI?.addEventListener('input',update);
+
+      // reset/random
+      ctrl.querySelector('#mech-reset')?.addEventListener('click',()=>{
+        state.support='cantilever';
+        state.load='point';
+        state.diagram='M';
+        state.a=0.7;
+        state.F=350;
+        state.q=420;
+        state.M0=220;
+        state.EI=160;
+        state.probe=0.55;
+        renderControls();
+        draw();
+      });
+
+      ctrl.querySelector('#mech-rand')?.addEventListener('click',()=>{
+        const supports=['cantilever','simple'];
+        state.support=supports[Math.floor(Math.random()*supports.length)];
+        const loads=state.support==='cantilever' ? ['point','udl','moment'] : ['point','udl'];
+        state.load=loads[Math.floor(Math.random()*loads.length)];
+        state.diagram=(Math.random()>0.5?'M':'V');
+        const {min,max}=getPosClamp();
+        state.a=clamp(min+Math.random()*(max-min),min,max);
+        state.F=Math.round(120+Math.random()*760);
+        state.q=Math.round(120+Math.random()*780);
+        state.M0=Math.round(80+Math.random()*580);
+        state.EI=Math.round(80+Math.random()*320);
+        state.probe=clamp(Math.random(),0,1);
+        renderControls();
+        draw();
+      });
+    }
+
+    function getA(){
+      const {min,max}=getPosClamp();
+      state.a=clamp(state.a,min,max);
+      return state.a*state.L;
+    }
+
+    function shearV(x){
+      const L=state.L;
+      const EI=state.EI;
+      void EI;
+      if(state.support==='cantilever'){
+        const a=getA();
+        if(state.load==='point')return x<=a ? -state.F : 0;
+        if(state.load==='udl')return -state.q*(L-x);
+        return 0;
+      }
+      // simply supported
+      if(state.load==='point'){
+        const a=getA();
+        const R1=state.F*(L-a)/L;
+        return x<a ? R1 : (R1-state.F);
+      }
+      // udl
+      const R1=state.q*L/2;
+      return R1 - state.q*x;
+    }
+
+    function momentM(x){
+      const L=state.L;
+      if(state.support==='cantilever'){
+        const a=getA();
+        if(state.load==='point')return x<=a ? -state.F*(a-x) : 0;
+        if(state.load==='udl')return -state.q*Math.pow(L-x,2)/2;
+        return -state.M0;
+      }
+      // simply supported
+      if(state.load==='point'){
+        const a=getA();
+        const R1=state.F*(L-a)/L;
+        return x<a ? R1*x : (R1*x - state.F*(x-a));
+      }
+      // udl
+      const R1=state.q*L/2;
+      return R1*x - state.q*x*x/2;
+    }
+
+    function deflectionW(x){
+      const L=state.L;
+      const EI=Math.max(1e-6,state.EI);
+      if(state.support==='cantilever'){
+        const a=getA();
+        if(state.load==='point'){
+          if(x<=a){
+            return -(state.F/EI)*(a*x*x/2 - x*x*x/6);
+          }
+          return -(state.F/EI)*(a*a*x/2 - a*a*a/6);
+        }
+        if(state.load==='udl'){
+          const q=state.q;
+          return -(q/(24*EI))*x*x*(6*L*L - 4*L*x + x*x);
+        }
+        // end moment
+        return -(state.M0/(2*EI))*x*x;
+      }
+      // simply supported
+      if(state.load==='point'){
+        const a=getA();
+        const b=L-a;
+        if(x<=a){
+          return -(state.F*b*x*(L*L - b*b - x*x))/(6*L*EI);
+        }
+        const xp=L-x;
+        return -(state.F*a*xp*(L*L - a*a - xp*xp))/(6*L*EI);
+      }
+      // udl
+      const q=state.q;
+      return -(q*x*(Math.pow(L,3) - 2*L*x*x + x*x*x))/(24*EI);
+    }
 
     function resizeCanvas(){
       const dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1));
       const maxW=Math.min(940,Math.max(320,Math.floor(window.innerWidth*0.92)));
       const w=maxW;
-      const h=Math.floor(w*0.42);
+      const h=Math.floor(w*0.50);
       canvas.style.width=w+'px';
       canvas.style.height=h+'px';
       canvas.width=Math.floor(w*dpr);
       canvas.height=Math.floor(h*dpr);
       ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+
+    function computeMaxAbs(fn,segs){
+      let m=0;
+      for(let i=0;i<=segs;i++){
+        const x=(i/segs)*state.L;
+        m=Math.max(m,Math.abs(fn(x)));
+      }
+      return m;
+    }
+
+    function drawSupportAndReactions(x0,x1,beamY,Lpx){
+      const L=state.L;
+      const base=beamY+10;
+      ctx.strokeStyle='rgba(61,53,44,0.85)';
+      ctx.fillStyle='rgba(61,53,44,0.85)';
+      ctx.lineWidth=1.5;
+
+      if(state.support==='cantilever'){
+        // Fixed clamp
+        ctx.fillRect(x0-8,beamY-22,8,44);
+        ctx.fillStyle='rgba(216,207,196,1)';
+        for(let i=0;i<9;i++)ctx.fillRect(x0-8,beamY-22+i*5,8,1);
+        // Reaction arrow + moment at clamp (educational hint)
+        ctx.fillStyle='rgba(26,107,74,0.9)';
+        ctx.strokeStyle='rgba(26,107,74,0.9)';
+        ctx.beginPath();
+        ctx.moveTo(x0+10,base+24);
+        ctx.lineTo(x0+10,base+6);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x0+4,base+12);
+        ctx.lineTo(x0+10,base+6);
+        ctx.lineTo(x0+16,base+12);
+        ctx.stroke();
+
+        const a=getA();
+        const R=(state.load==='moment')?0:(state.load==='udl'?state.q*L:state.F);
+        const Mfix=(state.load==='moment')?state.M0:(state.load==='udl'?state.q*L*L/2:state.F*a);
+        ctx.fillStyle='rgba(107,95,82,1)';
+        ctx.font='600 10px "Space Mono", monospace';
+        ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText(`R≈${Math.round(R)}N`,x0+18,base+10);
+        ctx.fillText(`M0≈${Math.round(Mfix)}N·m`,x0+18,base+24);
+        return;
+      }
+
+      // Simply supported: left pin + right roller
+      const pinX=x0;
+      const rolX=x1;
+      const triH=18, triW=18;
+      ctx.fillStyle='rgba(61,53,44,0.85)';
+      ctx.beginPath();
+      ctx.moveTo(pinX,base);
+      ctx.lineTo(pinX-triW/2,base+triH);
+      ctx.lineTo(pinX+triW/2,base+triH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle='rgba(216,207,196,1)';
+      ctx.beginPath();
+      ctx.moveTo(pinX-triW/2-6,base+triH);
+      ctx.lineTo(pinX+triW/2+6,base+triH);
+      ctx.stroke();
+
+      // roller
+      ctx.fillStyle='rgba(61,53,44,0.85)';
+      ctx.beginPath();ctx.arc(rolX,base+triH-5,5,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(216,207,196,1)';
+      ctx.beginPath();ctx.moveTo(rolX-14,base+triH+2);ctx.lineTo(rolX+14,base+triH+2);ctx.stroke();
+
+      // Reactions
+      const Lm=L;
+      let R1=0,R2=0;
+      if(state.load==='point'){
+        const a=getA();
+        R1=state.F*(Lm-a)/Lm;
+        R2=state.F*a/Lm;
+      }else{
+        R1=R2=state.q*Lm/2;
+      }
+      const drawUp=(x,label)=>{
+        ctx.strokeStyle='rgba(26,107,74,0.9)';
+        ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(x,base+24);ctx.lineTo(x,base+6);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x-6,base+12);ctx.lineTo(x,base+6);ctx.lineTo(x+6,base+12);ctx.stroke();
+        ctx.fillStyle='rgba(107,95,82,1)';
+        ctx.font='600 10px "Space Mono", monospace';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(label,x,base+30);
+      };
+      drawUp(pinX+10,`R1≈${Math.round(R1)}N`);
+      drawUp(rolX-10,`R2≈${Math.round(R2)}N`);
+    }
+
+    function drawLoad(x0,x1,beamY,Lpx){
+      const L=state.L;
+      ctx.strokeStyle='rgba(194,74,26,0.95)';
+      ctx.fillStyle='rgba(194,74,26,0.95)';
+      ctx.lineWidth=2;
+      if(state.load==='point'){
+        const a=getA();
+        const ax=x0+(a/L)*Lpx;
+        ctx.beginPath();ctx.moveTo(ax,beamY-34);ctx.lineTo(ax,beamY-6);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(ax-6,beamY-10);ctx.lineTo(ax,beamY-2);ctx.lineTo(ax+6,beamY-10);ctx.stroke();
+        return;
+      }
+      if(state.load==='udl'){
+        const n=10;
+        for(let i=0;i<=n;i++){
+          const t=i/n;
+          const x=x0+t*Lpx;
+          ctx.beginPath();ctx.moveTo(x,beamY-30);ctx.lineTo(x,beamY-6);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x-5,beamY-10);ctx.lineTo(x,beamY-2);ctx.lineTo(x+5,beamY-10);ctx.stroke();
+        }
+        // small label
+        ctx.fillStyle='rgba(107,95,82,1)';
+        ctx.font='600 10px "Space Mono", monospace';
+        ctx.textAlign='left';ctx.textBaseline='bottom';
+        ctx.fillText(`q=${Math.round(state.q)} N/m`,x0,beamY-36);
+        return;
+      }
+      // end moment (curved arrow at tip)
+      const x=x1;
+      const r=14;
+      ctx.beginPath();
+      ctx.arc(x,beamY-6,r,Math.PI*0.2,Math.PI*1.6,false);
+      ctx.stroke();
+      // arrow head
+      ctx.beginPath();
+      ctx.moveTo(x-3,beamY-6-r-2);
+      ctx.lineTo(x-10,beamY-6-r+6);
+      ctx.lineTo(x+1,beamY-6-r+6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle='rgba(107,95,82,1)';
+      ctx.font='600 10px "Space Mono", monospace';
+      ctx.textAlign='right';ctx.textBaseline='bottom';
+      ctx.fillText(`M=${Math.round(state.M0)} N·m`,x1,beamY-36);
     }
 
     function draw(){
@@ -1999,33 +2422,26 @@ applyLanguage(currentLang);
 
       const pad=18;
       const top=pad;
-      const plotH=Math.floor(H*0.26);
-      const beamH=H-plotH-pad*2-12;
-      const beamY=top+Math.floor(beamH*0.55);
+      const plotH=Math.floor(H*0.30);
+      const beamH=H-plotH-pad*2-14;
+      const beamY=top+Math.floor(beamH*0.50);
       const x0=pad+10;
       const x1=W-pad-10;
       const Lpx=x1-x0;
+      const segs=110;
 
-      const L=state.L;
-      const a=clamp(state.a*L,0.2*L,L);
-      const F=state.F;
-      const EI=state.EI;
+      // Deflection scaling
+      const maxAbsW=computeMaxAbs(deflectionW,segs);
+      const targetDef=beamH*0.36;
+      const scale=clamp(targetDef/(Math.max(1e-6,maxAbsW)),0,1400);
 
-      const maxM=F*a;
-      const tipW=beamDeflection(L,a,F,EI,L);
-      const maxW=tipW;
-      const targetDef=beamH*0.34;
-      const scale=clamp(targetDef/(Math.max(1e-6,Math.abs(maxW))),0,1200);
-
-      // Beam segments colored by moment magnitude
-      const segs=90;
+      // Moment magnitude for coloring
+      const maxAbsM=computeMaxAbs(momentM,segs);
       for(let i=0;i<segs;i++){
         const t0=i/segs, t1=(i+1)/segs;
-        const xm=(t0+t1)/2*L;
-        const M=beamMoment(xm,a,F);
-        const r=maxM>0?M/maxM:0;
-        const alpha=0.08+0.55*r;
-        ctx.fillStyle=rgba(26,107,74,alpha);
+        const xm=(t0+t1)/2*state.L;
+        const r=maxAbsM>0?Math.abs(momentM(xm))/maxAbsM:0;
+        ctx.fillStyle=rgba(26,107,74,0.08+0.55*r);
         const sx=x0+t0*Lpx;
         const sw=(t1-t0)*Lpx+1;
         ctx.fillRect(sx,beamY-10,sw,20);
@@ -2034,14 +2450,17 @@ applyLanguage(currentLang);
       ctx.lineWidth=1;
       ctx.strokeRect(x0,beamY-10,Lpx,20);
 
-      // Deflection curve
+      // supports + reactions
+      drawSupportAndReactions(x0,x1,beamY,Lpx);
+
+      // deflection curve
       ctx.beginPath();
       for(let i=0;i<=segs;i++){
         const t=i/segs;
-        const x=t*L;
-        const w=beamDeflection(x,a,F,EI,L);
+        const x=t*state.L;
+        const w=deflectionW(x);
         const sx=x0+t*Lpx;
-        const sy=beamY + w*scale;
+        const sy=beamY - w*scale;
         if(i===0)ctx.moveTo(sx,sy);
         else ctx.lineTo(sx,sy);
       }
@@ -2049,132 +2468,134 @@ applyLanguage(currentLang);
       ctx.lineWidth=2;
       ctx.stroke();
 
-      // Fixed clamp
-      ctx.fillStyle='rgba(61,53,44,0.9)';
-      ctx.fillRect(x0-8,beamY-22,8,44);
-      ctx.fillStyle='rgba(216,207,196,1)';
-      for(let i=0;i<9;i++){
-        ctx.fillRect(x0-8,beamY-22+i*5,8,1);
-      }
+      // load marker(s)
+      drawLoad(x0,x1,beamY,Lpx);
 
-      // Load marker
-      const ax=x0+(a/L)*Lpx;
-      ctx.strokeStyle='rgba(194,74,26,0.95)';
-      ctx.lineWidth=2;
-      ctx.beginPath();
-      ctx.moveTo(ax,beamY-34);
-      ctx.lineTo(ax,beamY-6);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(ax-6,beamY-10);
-      ctx.lineTo(ax,beamY-2);
-      ctx.lineTo(ax+6,beamY-10);
-      ctx.stroke();
+      // probe (vertical guide + values)
+      state.probe=clamp(state.probe,0,1);
+      const px=x0+state.probe*Lpx;
+      ctx.strokeStyle='rgba(61,53,44,0.25)';
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(px,top+6);ctx.lineTo(px,beamY+38);ctx.stroke();
 
-      // Moment diagram (below)
+      const xProbe=state.probe*state.L;
+      const wProbe=deflectionW(xProbe);
+      const vProbe=shearV(xProbe);
+      const mProbe=momentM(xProbe);
+
+      // Diagram area (shear or moment)
       const plotY=H-pad-plotH;
-      const baseY=plotY+plotH-14;
       ctx.fillStyle='rgba(245,240,232,1)';
       ctx.fillRect(x0,plotY,Lpx,plotH);
       ctx.strokeStyle='rgba(216,207,196,1)';
       ctx.lineWidth=1;
       ctx.strokeRect(x0,plotY,Lpx,plotH);
+
+      const fn=state.diagram==='V'?shearV:momentM;
+      const maxAbs=computeMaxAbs(fn,segs);
+      const midY=plotY+plotH/2;
+      const amp=(plotH/2)-18;
+      // axis
+      ctx.strokeStyle='rgba(61,53,44,0.25)';
+      ctx.beginPath();ctx.moveTo(x0,midY);ctx.lineTo(x1,midY);ctx.stroke();
+
+      // fill diagram
       ctx.beginPath();
-      ctx.moveTo(x0,baseY);
+      ctx.moveTo(x0,midY);
       for(let i=0;i<=segs;i++){
         const t=i/segs;
-        const x=t*L;
-        const M=beamMoment(x,a,F);
-        const y=baseY - (maxM>0? (M/maxM)*(plotH-28) : 0);
+        const x=t*state.L;
+        const val=fn(x);
+        const y=midY - (maxAbs>0?(val/maxAbs)*amp:0);
         const sx=x0+t*Lpx;
         ctx.lineTo(sx,y);
       }
-      ctx.lineTo(x0+(a/L)*Lpx,baseY);
-      ctx.lineTo(x0,baseY);
+      ctx.lineTo(x1,midY);
       ctx.closePath();
       ctx.fillStyle='rgba(26,107,74,0.12)';
       ctx.fill();
       ctx.strokeStyle='rgba(26,107,74,0.55)';
       ctx.stroke();
 
-      // Labels
-      const unit=currentLang==='fr'
-        ? {tip:'Flèche en bout',mm:'Moment max'}
-        : {tip:'Tip deflection',mm:'Max moment'};
+      // probe on plot
+      ctx.strokeStyle='rgba(61,53,44,0.25)';
+      ctx.beginPath();ctx.moveTo(px,plotY+6);ctx.lineTo(px,plotY+plotH-6);ctx.stroke();
+
+      const t=getLabels();
+      // labels
       ctx.fillStyle='rgba(107,95,82,1)';
       ctx.font='600 11px "Space Mono", monospace';
       ctx.textAlign='left';
       ctx.textBaseline='top';
-      ctx.fillText(`${unit.tip}: ${(tipW*1000).toFixed(1)} mm`, x0, top);
-      ctx.fillText(`${unit.mm}: ${(maxM).toFixed(0)} N·m`, x0, top+16);
-      ctx.fillText(`F=${F}N  a=${Math.round((a/L)*100)}%  EI=${EI}`, x0, top+32);
-      ctx.fillText(`M(x)`, x0+6, plotY+6);
-    }
 
-    function bindControls(){
-      const slA=ctrl.querySelector('#mech-a');
-      const slF=ctrl.querySelector('#mech-f');
-      const slEI=ctrl.querySelector('#mech-ei');
-      const vA=ctrl.querySelector('#mech-a-v');
-      const vF=ctrl.querySelector('#mech-f-v');
-      const vEI=ctrl.querySelector('#mech-ei-v');
-      const reset=ctrl.querySelector('#mech-reset');
-      const rand=ctrl.querySelector('#mech-rand');
-      const update=()=>{
-        state.a=+slA.value/100;
-        state.F=+slF.value;
-        state.EI=+slEI.value;
-        vA.textContent=Math.round(state.a*100)+'%';
-        vF.textContent=state.F+'N';
-        vEI.textContent=String(state.EI);
-        draw();
-      };
-      slA.addEventListener('input',update);
-      slF.addEventListener('input',update);
-      slEI.addEventListener('input',update);
-      reset.addEventListener('click',()=>{
-        state.a=0.7; state.F=350; state.EI=160;
-        slA.value=String(Math.round(state.a*100));
-        slF.value=String(state.F);
-        slEI.value=String(state.EI);
-        update();
-      });
-      rand.addEventListener('click',()=>{
-        state.a=clamp(0.2+Math.random()*0.8,0.2,1);
-        state.F=Math.round(120+Math.random()*640);
-        state.EI=Math.round(80+Math.random()*320);
-        slA.value=String(Math.round(state.a*100));
-        slF.value=String(state.F);
-        slEI.value=String(state.EI);
-        update();
-      });
+      // max deflection (use sampling for simply supported)
+      let wMin=0, xWMin=state.L;
+      for(let i=0;i<=segs;i++){
+        const x=(i/segs)*state.L;
+        const w=deflectionW(x);
+        if(w<wMin){wMin=w; xWMin=x;}
+      }
+      const wShow=state.support==='cantilever'?deflectionW(state.L):wMin;
+      const wMm=Math.abs(wShow)*1000;
+      const xPct=Math.round((xWMin/state.L)*100);
+
+      const supportLabel=state.support==='cantilever'?(currentLang==='fr'?'Console':'Cantilever'):(currentLang==='fr'?'Appuis simples':'Simply supported');
+      const loadLabel=state.load==='point'?(currentLang==='fr'?'Charge ponctuelle':'Point load'):(state.load==='udl'?(currentLang==='fr'?'Charge répartie':'Distributed load'):(currentLang==='fr'?'Couple en bout':'End moment'));
+
+      ctx.fillText(`${supportLabel} · ${loadLabel}`,x0,top);
+      ctx.fillText(`${t.tip}: ${wMm.toFixed(1)} mm${state.support==='simple'?` (x≈${xPct}%)`:''}`,x0,top+16);
+      ctx.fillText(`w(x): ${(wProbe*1000).toFixed(1)} mm   V(x): ${vProbe.toFixed(0)} N   M(x): ${mProbe.toFixed(0)} N·m`,x0,top+32);
+      ctx.fillText(`x=${Math.round(state.probe*100)}%`,x0,top+48);
+      ctx.fillText(`EI=${state.EI}`,x0,top+64);
+
+      ctx.fillText(`${state.diagram}(x)`,x0+6,plotY+6);
+      if(maxAbs>0){
+        const unit=state.diagram==='V'?'N':'N·m';
+        ctx.textAlign='right';
+        ctx.fillText(`max |${state.diagram}| ≈ ${Math.round(maxAbs)} ${unit}`,x1,plotY+6);
+      }
     }
 
     function setAFromPointer(clientX){
       const rect=canvas.getBoundingClientRect();
       const x=(clientX-rect.left)/rect.width;
-      state.a=clamp(x,0.2,1);
+      const {min,max}=getPosClamp();
+      state.a=clamp(x,min,max);
       const slA=ctrl.querySelector('#mech-a');
       if(slA)slA.value=String(Math.round(state.a*100));
       const vA=ctrl.querySelector('#mech-a-v');
       if(vA)vA.textContent=Math.round(state.a*100)+'%';
-      draw();
+    }
+
+    function setProbeFromPointer(clientX){
+      const rect=canvas.getBoundingClientRect();
+      const x=(clientX-rect.left)/rect.width;
+      state.probe=clamp(x,0,1);
     }
 
     function onPointerDown(e){
       const rect=canvas.getBoundingClientRect();
       const x=(e.clientX-rect.left)/rect.width;
       const y=(e.clientY-rect.top)/rect.height;
-      // If near the top beam zone, allow dragging the load position.
-      if(y<0.72){
+      state.probe=clamp(x,0,1);
+      // Drag only for point load, near beam zone.
+      if(state.load==='point'&&y<0.62){
         state.drag=true;
         setAFromPointer(e.clientX);
+        draw();
         canvas.setPointerCapture?.(e.pointerId);
+        return;
       }
+      draw();
     }
     function onPointerMove(e){
-      if(!state.drag)return;
-      setAFromPointer(e.clientX);
+      if(state.drag){
+        setAFromPointer(e.clientX);
+        draw();
+        return;
+      }
+      setProbeFromPointer(e.clientX);
+      draw();
     }
     function onPointerUp(){
       state.drag=false;
@@ -2201,9 +2622,8 @@ applyLanguage(currentLang);
       draw();
     }
 
-    setCtrlHTML();
+    renderControls();
     resizeCanvas();
-    bindControls();
     draw();
     document.getElementById('konami-close')?.focus();
     canvas.addEventListener('pointerdown',onPointerDown);
